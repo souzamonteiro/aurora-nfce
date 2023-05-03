@@ -1,2 +1,2 @@
-# aurora-nfce
-Emissor de NFC-e
+# Aurora NFC-e
+Emissor de NFC-e.
