@@ -1,0 +1,145 @@
+{
+    "infNFe": {
+        "ide": {
+            "cUF": "13",
+            "cNF": "15",
+            "natOp": "NOTA FISCAL CONSUMIDOR ELETRONICA",
+            "mod": "65",
+            "serie": "1",
+            "nNF": "14",
+            "dhEmi": "2023-05-02 04:49:24",
+            "tpNF": "1",
+            "idDest": "1",
+            "cMunFG": "2927408",
+            "tpImp": "4",
+            "tpEmis": "1",
+            "cDV": "6",
+            "tpAmb": "2",
+            "finNFe": "1",
+            "indFinal": "1",
+            "indPres": "1",
+            "procEmi": "0",
+            "verProc": "1.0"
+        },
+        "emit":{
+            "CNPJ": "33630582000149",
+            "xNome": "Editora Roberto Luiz Souza Monteiro",
+            "IE": "158039716",
+            "CRT": "3",
+            "enderEmit": {
+                "xLgr": "Rua Chile",
+                "nro": "s/n",
+                "xCpl": "Edifício Eduardo De Moraes, sala 606",
+                "xBairro": "Centro",
+                "cMun": "2927408",
+                "xMun": "Salvador",
+                "UF": "AM",
+                "CEP": "40020000",
+                "cPais": "1058",
+                "xPais": "Brasil",
+                "fone": "71991721874"
+            }
+        },
+        "dest": {
+            "CPF": "40325635862",
+            "xNome": "NF-E EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL",
+            "enderDest": {
+                "xLgr": "Rua Tanhaçu",
+                "nro": "11",
+                "xBairro": "Ipitanga",
+                "cMun": "2919207",
+                "xMun": "Lauro de Freitas",
+                "UF": "BA",
+                "CEP": "42706730",
+                "cPais": "1058",
+                "xPais": "Brasil",
+                "fone": "71991965292"
+            }
+        },
+        "autXML": {
+            "CNPJ": "13937073000156"
+        },
+        "det": [{
+                "prod": {
+                    "cProd": "7898480650104",
+                    "cEAN": "7898480650104",
+                    "xProd": "NOTA FISCAL EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL",
+                    "NCM": "27101932",
+                    "CEST": "0600500",
+                    "indEscala": "S",
+                    "CFOP": "5102",
+                    "uCom": "UN",
+                    "qCom": "1.0000",
+                    "vUnCom": "13.0000",
+                    "vProd": "13.00",
+                    "cEANTrib": "7898480650104",
+                    "uTrib": "UN",
+                    "qTrib": "1.0000",
+                    "vUnTrib": "13.0000",
+                    "indTot": "1"
+                },
+                "imposto": {
+                    "ICMS": {
+                        "ICMS00": {
+                            "orig": "0",
+                            "CST": "00",
+                            "modBC": "0",
+                            "vBC": "13.00",
+                            "pICMS": "7.00",
+                            "vICMS": "0.91"
+                        }
+                    },
+                    "PIS": {
+                        "PISAliq": {
+                            "CST": "01",
+                            "vBC": "13.00",
+                            "pPIS": "1.65",
+                            "vPIS": "0.21"
+                        }
+                    },
+                    "COFINS": {
+                        "COFINSAliq": {
+                            "CST": "01",
+                            "vBC": "13.00",
+                            "pCOFINS": "7.60",
+                            "vCOFINS": "0.99"
+                        }
+                    }
+                }
+            }
+        ],
+        "total": {
+            "ICMSTot": {
+                "vBC": "13.00",
+                "vICMS": "0.91",
+                "vICMSDeson": "0.00",
+                "vFCP": "0.00",
+                "vBCST": "0.00",
+                "vST": "0.00",
+                "vFCPST": "0.00",
+                "vFCPSTRet": "0.00",
+                "vProd": "13.00",
+                "vFrete": "0.00",
+                "vSeg": "0.00",
+                "vDesc": "0.00",
+                "vII": "0.00",
+                "vIPI": "0.00",
+                "vIPIDevol": "0.00",
+                "vPIS": "0.21",
+                "vCOFINS": "0.99",
+                "vOutro": "0.00",
+                "vNF": "13.00"
+            }
+        },
+        "transp": {
+            "modFrete": "9"
+        },
+        "pag": [{
+            "tPag": "01",
+            "vPag": "13.00"
+        }],
+        "infAdic": {
+            "infCpl": "Tributos Totais Incidentes (Lei Federal 12.741/2012): R$2,11"
+        }
+    }
+}
