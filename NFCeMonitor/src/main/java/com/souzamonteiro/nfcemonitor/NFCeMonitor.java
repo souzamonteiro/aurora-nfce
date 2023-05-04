@@ -18,10 +18,6 @@
 
 package com.souzamonteiro.nfcemonitor;
 
-import br.com.swconsultoria.impressao.model.Impressao;
-import br.com.swconsultoria.impressao.service.ImpressaoService;
-import br.com.swconsultoria.impressao.util.ImpressaoUtil;
-
 import br.com.swconsultoria.nfe.dom.ConfiguracoesNfe;
 import br.com.swconsultoria.nfe.dom.enuns.*;
 import br.com.swconsultoria.nfe.Nfe;
@@ -143,9 +139,7 @@ public class NFCeMonitor {
             JSONObject configuracoes = new JSONObject(jsonConfiguracoes);
             
             String webserviceAmbiente = configuracoes.get("webserviceAmbiente").toString();
-            String webserviceConsulta = configuracoes.get("webserviceConsulta").toString();
             String caminhoXML = configuracoes.get("caminhoXML").toString();
-            String retornarDANFE = configuracoes.get("retornarDANFE").toString();
             String simularContingencia = "0";
             if (configuracoes.has("simularContingencia")) {
                 simularContingencia = configuracoes.get("simularContingencia").toString();
@@ -165,7 +159,14 @@ public class NFCeMonitor {
             
             String cStat = "";
             String xMotivo = "";
+            String dhRecbto = "";
             String nProt = "";
+            String tpEmis = "";
+            String dhCont = "";
+            String xJust = "";
+            String chave = "";
+            String urlChave = "";
+            String qrCode = "";
             String xml = "";
             
             /*
@@ -186,7 +187,14 @@ public class NFCeMonitor {
                 JSONObject responseJSON = new JSONObject();
                 responseJSON.put("cStat", cStat);
                 responseJSON.put("xMotivo", xMotivo);
+                responseJSON.put("dhRecbto", dhRecbto);
                 responseJSON.put("nProt", nProt);
+                responseJSON.put("tpEmis", tpEmis);
+                responseJSON.put("dhCont", dhCont);
+                responseJSON.put("xJust", xJust);
+                responseJSON.put("chave", chave);
+                responseJSON.put("urlChave", urlChave);
+                responseJSON.put("qrCode", qrCode);
                 responseJSON.put("xml", xml);
 
                 System.out.println(responseJSON.toString());
@@ -232,7 +240,7 @@ public class NFCeMonitor {
             // Série da NFC-e.
             int serie = Integer.parseInt(jsonIde.get("serie").toString());
             // Tipo de emissao da NFC-e.
-            String tipoEmissao = jsonIde.get("tpEmis").toString();
+            tpEmis = jsonIde.get("tpEmis").toString();
 
             // Id do token de emissão da NFC-e..
             String idToken = configuracoes.get("idToken").toString();
@@ -240,8 +248,8 @@ public class NFCeMonitor {
             String csc = configuracoes.get("CSC").toString();
 
             // Chave da NFC-e.
-            ChaveUtil chaveUtil = new ChaveUtil(config.getEstado(), cnpj, modelo, serie, numeroNFCe, tipoEmissao, cnf, dataEmissao);
-            String chave = chaveUtil.getChaveNF();
+            ChaveUtil chaveUtil = new ChaveUtil(config.getEstado(), cnpj, modelo, serie, numeroNFCe, tpEmis, cnf, dataEmissao);
+            chave = chaveUtil.getChaveNF();
             String cdv = chaveUtil.getDigitoVerificador();
 
             InfNFe infNFe = new InfNFe();
@@ -262,7 +270,7 @@ public class NFCeMonitor {
             ide.setIdDest(jsonIde.get("idDest").toString());
             ide.setCMunFG(jsonIde.get("cMunFG").toString());
             ide.setTpImp(jsonIde.get("tpImp").toString());
-            ide.setTpEmis(tipoEmissao);
+            ide.setTpEmis(tpEmis);
             ide.setCDV(cdv);
             ide.setTpAmb(config.getAmbiente().getCodigo());
             ide.setFinNFe(jsonIde.get("finNFe").toString());
@@ -960,16 +968,15 @@ public class NFCeMonitor {
                 enviNFe = Nfe.montaNfe(config, enviNFe, true);
 
                 // Monta o QR Code.
-                String qrCode;
-                if (tipoEmissao.equals("9")) {
+                urlChave = WebServiceUtil.getUrl(config, DocumentoEnum.NFCE, ServicosEnum.URL_CONSULTANFCE);  
+                if (tpEmis.equals("9")) {
                     qrCode = preencheQRCodeContingencia(enviNFe, config, idToken, csc);
                 } else {
                     qrCode = preencheQRCode(enviNFe, config, idToken, csc);
                 }
-                
                 TNFe.InfNFeSupl infNFeSupl = new TNFe.InfNFeSupl();
                 infNFeSupl.setQrCode(qrCode);
-                infNFeSupl.setUrlChave(WebServiceUtil.getUrl(config, DocumentoEnum.NFCE, ServicosEnum.URL_CONSULTANFCE));
+                infNFeSupl.setUrlChave(urlChave);
                 enviNFe.getNFe().get(0).setInfNFeSupl(infNFeSupl);
 
                 // Envia a NFC-e para a SEFAZ.
@@ -1002,6 +1009,7 @@ public class NFCeMonitor {
                     System.out.println("cStat: " + cStat + " - " + xMotivo);
                     if (cStat.equals("100")) {
                         nProt = retornoNfe.getProtNFe().get(0).getInfProt().getNProt();
+                        dhRecbto = retornoNfe.getProtNFe().get(0).getInfProt().getDhRecbto();
                         xml = XmlNfeUtil.criaNfeProc(enviNFe, retornoNfe.getProtNFe().get(0));
                         
                         // Salva o XML da NFC-e.
@@ -1022,6 +1030,7 @@ public class NFCeMonitor {
                     System.out.println("cStat: " + cStat + " - " + xMotivo);
                     if (cStat.equals("100")) {
                         nProt = retorno.getProtNFe().getInfProt().getNProt();
+                        dhRecbto = retorno.getProtNFe().getInfProt().getDhRecbto();
                         xml = XmlNfeUtil.criaNfeProc(enviNFe, retorno.getProtNFe());
                         
                         // Salva o XML da NFC-e.
@@ -1040,26 +1049,27 @@ public class NFCeMonitor {
                     nProt = "";
                     
                     // Tipo da emissão contingência: tpEmis = "9".
-                    tipoEmissao = "9";
-                    chaveUtil = new ChaveUtil(config.getEstado(), cnpj, modelo, serie, numeroNFCe, tipoEmissao, cnf, dataEmissao);
+                    tpEmis = "9";
+                    chaveUtil = new ChaveUtil(config.getEstado(), cnpj, modelo, serie, numeroNFCe, tpEmis, cnf, dataEmissao);
                     chave = chaveUtil.getChaveNF();
                     cdv = chaveUtil.getDigitoVerificador();
                     enviNFeContingencia.getNFe().get(0).getInfNFe().setId(chave);
-                    enviNFeContingencia.getNFe().get(0).getInfNFe().getIde().setTpEmis(tipoEmissao);
+                    enviNFeContingencia.getNFe().get(0).getInfNFe().getIde().setTpEmis(tpEmis);
                     enviNFeContingencia.getNFe().get(0).getInfNFe().getIde().setCDV(cdv);
 
-                    String dhCont = XmlNfeUtil.dataNfe(dataEmissao);
-                    String xJust = "Erro ao tentar enviar o XML da NF-e para a SEFAZ";
+                    dhCont = XmlNfeUtil.dataNfe(dataEmissao);
+                    xJust = "Erro ao tentar enviar o XML da NF-e para a SEFAZ";
                     enviNFeContingencia.getNFe().get(0).getInfNFe().getIde().setDhCont(dhCont);
                     enviNFeContingencia.getNFe().get(0).getInfNFe().getIde().setXJust(xJust);
 
                     try {
                         enviNFeContingencia = Nfe.montaNfe(config, enviNFeContingencia, true);
 
+                        urlChave = WebServiceUtil.getUrl(config, DocumentoEnum.NFCE, ServicosEnum.URL_CONSULTANFCE);  
                         qrCode = preencheQRCodeContingencia(enviNFeContingencia, config, idToken, csc);
                         infNFeSupl = new TNFe.InfNFeSupl();
                         infNFeSupl.setQrCode(qrCode);
-                        infNFeSupl.setUrlChave(WebServiceUtil.getUrl(config, DocumentoEnum.NFCE, ServicosEnum.URL_CONSULTANFCE));
+                        infNFeSupl.setUrlChave(urlChave);
                         enviNFeContingencia.getNFe().get(0).setInfNFeSupl(infNFeSupl);
 
                         xml = XmlNfeUtil.objectToXml(enviNFeContingencia.getNFe().get(0), config.getEncode());
@@ -1084,26 +1094,27 @@ public class NFCeMonitor {
                 xMotivo = e.getMessage();
                 
                 // Tipo da emissão contingência: tpEmis = "9".
-                tipoEmissao = "9";
-                chaveUtil = new ChaveUtil(config.getEstado(), cnpj, modelo, serie, numeroNFCe, tipoEmissao, cnf, dataEmissao);
+                tpEmis = "9";
+                chaveUtil = new ChaveUtil(config.getEstado(), cnpj, modelo, serie, numeroNFCe, tpEmis, cnf, dataEmissao);
                 chave = chaveUtil.getChaveNF();
                 cdv = chaveUtil.getDigitoVerificador();
                 enviNFeContingencia.getNFe().get(0).getInfNFe().setId(chave);
-                enviNFeContingencia.getNFe().get(0).getInfNFe().getIde().setTpEmis(tipoEmissao);
+                enviNFeContingencia.getNFe().get(0).getInfNFe().getIde().setTpEmis(tpEmis);
                 enviNFeContingencia.getNFe().get(0).getInfNFe().getIde().setCDV(cdv);
                 
-                String dhCont = XmlNfeUtil.dataNfe(dataEmissao);
-                String xJust = "Erro ao tentar enviar o XML da NF-e para a SEFAZ";
+                dhCont = XmlNfeUtil.dataNfe(dataEmissao);
+                xJust = "Erro ao tentar enviar o XML da NF-e para a SEFAZ";
                 enviNFeContingencia.getNFe().get(0).getInfNFe().getIde().setDhCont(dhCont);
                 enviNFeContingencia.getNFe().get(0).getInfNFe().getIde().setXJust(xJust);
                 
                 try {
                     enviNFeContingencia = Nfe.montaNfe(config, enviNFeContingencia, true);
 
-                    String qrCode = preencheQRCodeContingencia(enviNFeContingencia, config, idToken, csc);
+                    urlChave = WebServiceUtil.getUrl(config, DocumentoEnum.NFCE, ServicosEnum.URL_CONSULTANFCE);  
+                    qrCode = preencheQRCodeContingencia(enviNFeContingencia, config, idToken, csc);
                     TNFe.InfNFeSupl infNFeSupl = new TNFe.InfNFeSupl();
                     infNFeSupl.setQrCode(qrCode);
-                    infNFeSupl.setUrlChave(WebServiceUtil.getUrl(config, DocumentoEnum.NFCE, ServicosEnum.URL_CONSULTANFCE));
+                    infNFeSupl.setUrlChave(urlChave);
                     enviNFeContingencia.getNFe().get(0).setInfNFeSupl(infNFeSupl);
                     
                     xml = XmlNfeUtil.objectToXml(enviNFeContingencia.getNFe().get(0), config.getEncode());
@@ -1125,9 +1136,16 @@ public class NFCeMonitor {
             JSONObject responseJSON = new JSONObject();
             responseJSON.put("cStat", cStat);
             responseJSON.put("xMotivo", xMotivo);
+            responseJSON.put("dhRecbto", dhRecbto);
             responseJSON.put("nProt", nProt);
+            responseJSON.put("tpEmis", tpEmis);
+            responseJSON.put("dhCont", dhCont);
+            responseJSON.put("xJust", xJust);
+            responseJSON.put("chave", chave);
+            responseJSON.put("urlChave", urlChave);
+            responseJSON.put("qrCode", qrCode);
             responseJSON.put("xml", xml);
-            
+
             System.out.println(responseJSON.toString());
             
             String response = responseJSON.toString();
