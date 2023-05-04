@@ -67,6 +67,7 @@ import com.sun.net.httpserver.HttpServer;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.json.XML;
 
 /**
  * Emissor de NFC-e.
@@ -161,7 +162,6 @@ public class NFCeMonitor {
             }
             
             JSONObject json = new JSONObject(dados);
-            System.out.println(json.toString());
             
             String status = "";
             String motivo = "";
@@ -206,15 +206,12 @@ public class NFCeMonitor {
             JSONObject jsonEmit = jsonInfNFe.getJSONObject("emit");
             JSONObject jsonEnderEmit = jsonEmit.getJSONObject("enderEmit");
             JSONObject jsonDest = jsonInfNFe.getJSONObject("dest");
-            JSONObject jsonEnderDest = jsonDest.getJSONObject("enderDest");
-            JSONObject jsonAutXML = jsonInfNFe.getJSONObject("autXML");
             JSONArray jsonDet = jsonInfNFe.getJSONArray("det");
             JSONObject jsonTotal = jsonInfNFe.getJSONObject("total");
             JSONObject jsonICMSTot = jsonTotal.getJSONObject("ICMSTot");
             JSONObject jsonTransp = jsonInfNFe.getJSONObject("transp");
             JSONArray jsonPag = jsonInfNFe.getJSONArray("pag");
-            JSONObject jsonInfAdic = jsonInfNFe.getJSONObject("infAdic");
-
+            
             // Numero da NFC-e.
             String nNF = jsonIde.get("nNF").toString();
             String cNF = jsonIde.get("cNF").toString();
@@ -274,7 +271,10 @@ public class NFCeMonitor {
             ide.setIndPres(jsonIde.get("indPres").toString());
             ide.setProcEmi(jsonIde.get("procEmi").toString());
             ide.setVerProc(jsonIde.get("verProc").toString());
-
+            if (jsonIde.has("dhCont")) {
+                ide.setDhCont(jsonIde.get("dhCont").toString());
+                ide.setXJust(jsonIde.get("xJust").toString());
+            }
             infNFe.setIde(ide);
 
             // Preenche o Emitente.
@@ -286,15 +286,23 @@ public class NFCeMonitor {
             TEnderEmi enderEmit = new TEnderEmi();
             enderEmit.setXLgr(jsonEnderEmit.get("xLgr").toString());
             enderEmit.setNro(jsonEnderEmit.get("nro").toString());
-            enderEmit.setXCpl(jsonEnderEmit.get("xCpl").toString());
+            if (jsonEnderEmit.has("xCpl")) {
+                enderEmit.setXCpl(jsonEnderEmit.get("xCpl").toString());
+            }
             enderEmit.setXBairro(jsonEnderEmit.get("xBairro").toString());
             enderEmit.setCMun(jsonEnderEmit.get("cMun").toString());
             enderEmit.setXMun(jsonEnderEmit.get("xMun").toString());
             enderEmit.setUF(TUfEmi.valueOf(config.getEstado().toString()));
             enderEmit.setCEP(jsonEnderEmit.get("CEP").toString());
-            enderEmit.setCPais(jsonEnderEmit.get("cPais").toString());
-            enderEmit.setXPais(jsonEnderEmit.get("xPais").toString());
-            enderEmit.setFone(jsonEnderEmit.get("fone").toString());
+            if (jsonEnderEmit.has("cPais")) {
+                enderEmit.setCPais(jsonEnderEmit.get("cPais").toString());
+            }
+            if (jsonEnderEmit.has("xPais")) {
+                enderEmit.setXPais(jsonEnderEmit.get("xPais").toString());
+            }
+            if (jsonEnderEmit.has("fone")) {
+                enderEmit.setFone(jsonEnderEmit.get("fone").toString());
+            }
             emit.setEnderEmit(enderEmit);
 
             emit.setCRT(jsonEmit.get("CRT").toString());
@@ -303,34 +311,57 @@ public class NFCeMonitor {
 
             // Preenche o Destinatario.
             Dest dest = new Dest();
-            dest.setCPF(jsonDest.get("CPF").toString());
-
+            if (jsonDest.has("CNPJ")) {
+                dest.setCNPJ(jsonDest.get("CNPJ").toString());
+            }
+            if (jsonDest.has("CPF")) {
+                dest.setCPF(jsonDest.get("CPF").toString());
+            }
             if (webserviceAmbiente.equals("2")) {
                 dest.setXNome("NF-E EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL");
             } else {
                 dest.setXNome(jsonDest.get("xNome").toString());
             }
-            TEndereco enderDest = new TEndereco();
-            enderDest.setXLgr(jsonEnderDest.get("xLgr").toString());
-            enderDest.setNro(jsonEnderDest.get("nro").toString());
-            enderDest.setXBairro(jsonEnderDest.get("xBairro").toString());
-            enderDest.setCMun(jsonEnderDest.get("cMun").toString());
-            enderDest.setXMun(jsonEnderDest.get("xMun").toString());
-            enderDest.setUF(TUf.valueOf(jsonEnderDest.get("UF").toString()));
-            enderDest.setCEP(jsonEnderDest.get("CEP").toString());
-            enderDest.setCPais(jsonEnderDest.get("cPais").toString());
-            enderDest.setXPais(jsonEnderDest.get("xPais").toString());
-            enderDest.setFone(jsonEnderDest.get("fone").toString());
-            dest.setEnderDest(enderDest);
+            if (jsonDest.has("enderDest")) {
+                JSONObject jsonEnderDest = jsonDest.getJSONObject("enderDest");
+                
+                TEndereco enderDest = new TEndereco();
+                enderDest.setXLgr(jsonEnderDest.get("xLgr").toString());
+                enderDest.setNro(jsonEnderDest.get("nro").toString());
+                if (jsonEnderDest.has("xCpl")) {
+                    enderDest.setXCpl(jsonEnderDest.get("xCpl").toString());
+                }
+                enderDest.setXBairro(jsonEnderDest.get("xBairro").toString());
+                enderDest.setCMun(jsonEnderDest.get("cMun").toString());
+                enderDest.setXMun(jsonEnderDest.get("xMun").toString());
+                enderDest.setUF(TUf.valueOf(jsonEnderDest.get("UF").toString()));
+                if (jsonEnderDest.has("CEP")) {
+                    enderDest.setCEP(jsonEnderDest.get("CEP").toString());
+                }
+                if (jsonEnderDest.has("cPais")) {
+                    enderDest.setCPais(jsonEnderDest.get("cPais").toString());
+                }
+                if (jsonEnderDest.has("xPais")) {
+                    enderDest.setXPais(jsonEnderDest.get("xPais").toString());
+                }
+                if (jsonEnderDest.has("fone")) {
+                    enderDest.setFone(jsonEnderDest.get("fone").toString());
+                }
+                dest.setEnderDest(enderDest);
+            }
             dest.setIndIEDest("9");
-
+            
             infNFe.setDest(dest);
 
             // Preenche os dados do contador.
-            AutXML autXML = new AutXML();
-            autXML.setCNPJ(jsonAutXML.get("CNPJ").toString());
-            infNFe.getAutXML().add(autXML);
+            if (jsonInfNFe.has("autXML")) {
+                JSONObject jsonAutXML = jsonInfNFe.getJSONObject("autXML");
 
+                AutXML autXML = new AutXML();
+                autXML.setCNPJ(jsonAutXML.get("CNPJ").toString());
+                infNFe.getAutXML().add(autXML);
+            }
+            
             // Preenche os dados do Produto da NFC-e e adiciona à lista de produtos.
             for(int i = 0; i < jsonDet.length(); i++){
                 JSONObject itemDet = jsonDet.getJSONObject(i);
@@ -347,6 +378,12 @@ public class NFCeMonitor {
                 JSONObject jsonICMS60 = new JSONObject();
                 JSONObject jsonICMS70 = new JSONObject();
                 JSONObject jsonICMS90 = new JSONObject();
+                JSONObject jsonICMSSN101 = new JSONObject();
+                JSONObject jsonICMSSN102 = new JSONObject();
+                JSONObject jsonICMSSN201 = new JSONObject();
+                JSONObject jsonICMSSN202 = new JSONObject();
+                JSONObject jsonICMSSN500 = new JSONObject();
+                JSONObject jsonICMSSN900 = new JSONObject();
                 if (jsonICMS.has("ICMS00")) {
                     jsonICMS00 = jsonICMS.getJSONObject("ICMS00");
                 }
@@ -374,6 +411,24 @@ public class NFCeMonitor {
                 if (jsonICMS.has("ICMS90")) {
                     jsonICMS90 = jsonICMS.getJSONObject("ICMS90");
                 }
+                if (jsonICMS.has("ICMSSN101")) {
+                    jsonICMSSN101 = jsonICMS.getJSONObject("ICMSSN101");
+                }
+                if (jsonICMS.has("ICMSSN102")) {
+                    jsonICMSSN102 = jsonICMS.getJSONObject("ICMSSN102");
+                }
+                if (jsonICMS.has("ICMSSN201")) {
+                    jsonICMSSN201 = jsonICMS.getJSONObject("ICMSSN201");
+                }
+                if (jsonICMS.has("ICMSSN202")) {
+                    jsonICMSSN202 = jsonICMS.getJSONObject("ICMSSN202");
+                }
+                if (jsonICMS.has("ICMSSN500")) {
+                    jsonICMSSN500 = jsonICMS.getJSONObject("ICMSSN500");
+                }
+                if (jsonICMS.has("ICMSSN900")) {
+                    jsonICMSSN900 = jsonICMS.getJSONObject("ICMSSN900");
+                }
                 JSONObject jsonPIS = jsonImposto.getJSONObject("PIS");
                 JSONObject jsonPISAliq = jsonPIS.getJSONObject("PISAliq");
                 JSONObject jsonCOFINS = jsonImposto.getJSONObject("COFINS");
@@ -397,7 +452,18 @@ public class NFCeMonitor {
                 }
                 prod.setNCM(jsonProd.get("NCM").toString());
                 prod.setCEST(jsonProd.get("CEST").toString());
-                prod.setIndEscala(jsonProd.get("indEscala").toString());
+                if (jsonProd.has("indEscala")) {
+                    prod.setIndEscala(jsonProd.get("indEscala").toString());
+                }
+                if (jsonProd.has("CNPJFab")) {
+                    prod.setCNPJFab(jsonProd.get("CNPJFab").toString());
+                }
+                if (jsonProd.has("cBenef")) {
+                    prod.setCBenef(jsonProd.get("cBenef").toString());
+                }
+                if (jsonProd.has("EXTIPI")) {
+                    prod.setEXTIPI(jsonProd.get("EXTIPI").toString());
+                }
                 prod.setCFOP(jsonProd.get("CFOP").toString());
                 prod.setUCom(jsonProd.get("uCom").toString());
                 prod.setQCom(jsonProd.get("qCom").toString());
@@ -407,6 +473,18 @@ public class NFCeMonitor {
                 prod.setUTrib(jsonProd.get("uTrib").toString());
                 prod.setQTrib(jsonProd.get("qTrib").toString());
                 prod.setVUnTrib(jsonProd.get("vUnTrib").toString());
+                if (jsonProd.has("vFrete")) {
+                    prod.setVFrete(jsonProd.get("vFrete").toString());
+                }
+                if (jsonProd.has("vSeg")) {
+                    prod.setVSeg(jsonProd.get("vSeg").toString());
+                }
+                if (jsonProd.has("vDesc")) {
+                    prod.setVDesc(jsonProd.get("vDesc").toString());
+                }
+                if (jsonProd.has("vOutro")) {
+                    prod.setVOutro(jsonProd.get("vOutro").toString());
+                }
                 prod.setIndTot(jsonProd.get("indTot").toString());
 
                 det.setProd(prod);
@@ -424,6 +502,10 @@ public class NFCeMonitor {
                     icms00.setVBC(jsonICMS00.get("vBC").toString());
                     icms00.setPICMS(jsonICMS00.get("pICMS").toString());
                     icms00.setVICMS(jsonICMS00.get("vICMS").toString());
+                    if (jsonICMS00.has("pFCP")) {
+                        icms00.setPFCP(jsonICMS00.get("pFCP").toString());
+                        icms00.setVFCP(jsonICMS00.get("vFCP").toString());
+                    }
                     icms.setICMS00(icms00);
                 }
                 if (jsonICMS.has("ICMS10")) {
@@ -434,15 +516,26 @@ public class NFCeMonitor {
                     icms10.setVBC(jsonICMS10.get("vBC").toString());
                     icms10.setPICMS(jsonICMS10.get("pICMS").toString());
                     icms10.setVICMS(jsonICMS10.get("vICMS").toString());
-                    icms10.setVBCFCP(jsonICMS10.get("vBCFCP").toString());
-                    icms10.setPFCP(jsonICMS10.get("pFCP").toString());
-                    icms10.setVFCP(jsonICMS10.get("vFCP").toString());
-                    icms10.setModBCST(jsonICMS10.get("modBCST").toString());
-                    icms10.setPMVAST(jsonICMS10.get("pMVAST").toString());
-                    icms10.setPRedBCST(jsonICMS10.get("pRedBCST").toString());
-                    icms10.setVBCST(jsonICMS10.get("vBCST").toString());
-                    icms10.setPICMSST(jsonICMS10.get("pICMSST").toString());
-                    icms10.setVICMSST(jsonICMS10.get("vICMSST").toString());
+                    if (jsonICMS00.has("vBCFCP")) {
+                        icms10.setVBCFCP(jsonICMS10.get("vBCFCP").toString());
+                        icms10.setPFCP(jsonICMS10.get("pFCP").toString());
+                        icms10.setVFCP(jsonICMS10.get("vFCP").toString());
+                        icms10.setModBCST(jsonICMS10.get("modBCST").toString());
+                        if (jsonICMS00.has("pMVAST")) {
+                            icms10.setPMVAST(jsonICMS10.get("pMVAST").toString());
+                        }
+                        if (jsonICMS00.has("pRedBCST")) {
+                            icms10.setPRedBCST(jsonICMS10.get("pRedBCST").toString());
+                        }
+                        icms10.setVBCST(jsonICMS10.get("vBCST").toString());
+                        icms10.setPICMSST(jsonICMS10.get("pICMSST").toString());
+                        icms10.setVICMSST(jsonICMS10.get("vICMSST").toString());
+                    }
+                    if (jsonICMS00.has("vBCFCP")) {
+                        icms10.setVBCFCPST(jsonICMS10.get("vBCFCPST").toString());
+                        icms10.setPFCPST(jsonICMS10.get("pFCPST").toString());
+                        icms10.setVFCPST(jsonICMS10.get("vFCPST").toString());
+                    }
                     icms.setICMS10(icms10);
                 }
                 if (jsonICMS.has("ICMS20")) {
@@ -453,65 +546,98 @@ public class NFCeMonitor {
                     icms20.setVBC(jsonICMS20.get("vBC").toString());
                     icms20.setPICMS(jsonICMS20.get("pICMS").toString());
                     icms20.setVICMS(jsonICMS20.get("vICMS").toString());
-                    icms20.setVBCFCP(jsonICMS20.get("vBCFCP").toString());
-                    icms20.setPFCP(jsonICMS20.get("pFCP").toString());
-                    icms20.setVFCP(jsonICMS20.get("vFCP").toString());
-                    icms20.setVICMSDeson(jsonICMS20.get("vICMSDeson").toString());
-                    icms20.setMotDesICMS(jsonICMS20.get("motDesICMS").toString());
-                    iicms.setICMS20(icms20);
+                    if (jsonICMS20.has("vBCFCP")) {
+                        icms20.setVBCFCP(jsonICMS20.get("vBCFCP").toString());
+                        icms20.setPFCP(jsonICMS20.get("pFCP").toString());
+                        icms20.setVFCP(jsonICMS20.get("vFCP").toString());
+                    }
+                    if (jsonICMS20.has("vICMSDeson")) {
+                        icms20.setVICMSDeson(jsonICMS20.get("vICMSDeson").toString());
+                        icms20.setMotDesICMS(jsonICMS20.get("motDesICMS").toString());
+                    }
+                    icms.setICMS20(icms20);
                 }
                 if (jsonICMS.has("ICMS30")) {
                     ICMS.ICMS30 icms30 = new ICMS.ICMS30();
                     icms30.setOrig(jsonICMS30.get("orig").toString());
                     icms30.setCST(jsonICMS30.get("CST").toString());
                     icms30.setModBCST(jsonICMS30.get("modBCST").toString());
-                    icms30.setPMVAST(jsonICMS30.get("pMVAST").toString());
-                    icms30.setPRedBCST(jsonICMS30.get("pRedBCST").toString());
+                    if (jsonICMS30.has("pMVAST")) {
+                        icms30.setPMVAST(jsonICMS30.get("pMVAST").toString());
+                    }
+                    if (jsonICMS30.has("pRedBCST")) {
+                        icms30.setPRedBCST(jsonICMS30.get("pRedBCST").toString());
+                    }
                     icms30.setVBCST(jsonICMS30.get("vBCST").toString());
                     icms30.setPICMSST(jsonICMS30.get("pICMSST").toString());
                     icms30.setVICMSST(jsonICMS30.get("vICMSST").toString());
-                    icms30.setVBCFCPST(jsonICMS30.get("vBCFCPST").toString());
-                    icms30.setPFCPST(jsonICMS30.get("pFCPST").toString());
-                    icms30.setVFCPST(jsonICMS30.get("vFCPST").toString());
-                    icms30.setVICMSDeson(jsonICMS30.get("vICMSDeson").toString());
-                    icms30.setMotDesICMS(jsonICMS30.get("motDesICMS").toString());
+                    if (jsonICMS30.has("vBCFCPST")) {
+                        icms30.setVBCFCPST(jsonICMS30.get("vBCFCPST").toString());
+                        icms30.setPFCPST(jsonICMS30.get("pFCPST").toString());
+                        icms30.setVFCPST(jsonICMS30.get("vFCPST").toString());
+                    }
+                    if (jsonICMS30.has("vICMSDeson")) {
+                        icms30.setVICMSDeson(jsonICMS30.get("vICMSDeson").toString());
+                        icms30.setMotDesICMS(jsonICMS30.get("motDesICMS").toString());
+                    }
                     icms.setICMS30(icms30);
                 }
                 if (jsonICMS.has("ICMS40")) {
                     ICMS.ICMS40 icms40 = new ICMS.ICMS40();
                     icms40.setOrig(jsonICMS40.get("orig").toString());
                     icms40.setCST(jsonICMS40.get("CST").toString());
-                    icms40.setVICMSDeson(jsonICMS40.get("vICMSDeson").toString());
-                    icms40.setMotDesICMS(jsonICMS40.get("motDesICMS").toString());
+                    if (jsonICMS40.has("vICMSDeson")) {
+                        icms40.setVICMSDeson(jsonICMS40.get("vICMSDeson").toString());
+                        icms40.setMotDesICMS(jsonICMS40.get("motDesICMS").toString());
+                    }
                     icms.setICMS40(icms40);
                 }
                 if (jsonICMS.has("ICMS51")) {
                     ICMS.ICMS51 icms51 = new ICMS.ICMS51();
                     icms51.setOrig(jsonICMS51.get("orig").toString());
                     icms51.setCST(jsonICMS51.get("CST").toString());
-                    icms51.setModBC(jsonICMS51.get("modBC").toString());
-                    icms51.setVBC(jsonICMS51.get("vBC").toString());
-                    icms51.setPICMS(jsonICMS51.get("pICMS").toString());
-                    icms51.setVICMS(jsonICMS51.get("vICMS").toString());
-                    icms51.setVBCFCP(jsonICMS51.get("vBCFCP").toString());
-                    icms51.setPFCP(jsonICMS51.get("pFCP").toString());
-                    icms51.setVFCP(jsonICMS51.get("vFCP").toString());
+                    if (jsonICMS51.has("modBC")) {
+                        icms51.setModBC(jsonICMS51.get("modBC").toString());
+                    }
+                    if (jsonICMS51.has("vBC")) {
+                        icms51.setVBC(jsonICMS51.get("vBC").toString());
+                    }
+                    if (jsonICMS51.has("pICMS")) {
+                        icms51.setPICMS(jsonICMS51.get("pICMS").toString());
+                    }
+                    if (jsonICMS51.has("vICMS")) {
+                        icms51.setVICMS(jsonICMS51.get("vICMS").toString());
+                    }
+                    if (jsonICMS51.has("vBCFCP")) {
+                        icms51.setVBCFCP(jsonICMS51.get("vBCFCP").toString());
+                        icms51.setPFCP(jsonICMS51.get("pFCP").toString());
+                        icms51.setVFCP(jsonICMS51.get("vFCP").toString());
+                    }
                     icms.setICMS51(icms51);
                 }
                 if (jsonICMS.has("ICMS60")) {
                     ICMS.ICMS60 icms60 = new ICMS.ICMS60();
                     icms60.setOrig(jsonICMS60.get("orig").toString());
                     icms60.setCST(jsonICMS60.get("CST").toString());
-                    icms60.setVBCSTRet(jsonICMS60.get("vBCSTRet").toString());
-                    icms60.setPST(jsonICMS60.get("pST").toString());
-                    icms60.setVICMSSubstituto(jsonICMS60.get("vICMSSubstituto").toString());
-                    icms60.setVICMSSTRet(jsonICMS60.get("vICMSSTRet").toString());
-                    icms60.setVBCFCPSTRet(jsonICMS60.get("vBCFCPSTRet").toString());
-                    icms60.setPFCPSTRet(jsonICMS60.get("pFCPSTRet").toString());
-                    icms60.setPRedBCEfet(jsonICMS60.get("pRedBCEfet").toString());
-                    icms60.setVBCEfet(jsonICMS60.get("vBCEfet").toString());
-                    icms60.setPICMSEfet(jsonICMS60.get("pICMSEfet").toString());
-                    icms60.setVICMSEfet(jsonICMS60.get("vICMSEfet").toString());
+                    if (jsonICMS60.has("vBCSTRet")) {
+                        icms60.setVBCSTRet(jsonICMS60.get("vBCSTRet").toString());
+                        icms60.setPST(jsonICMS60.get("pST").toString());
+                        if (jsonICMS60.has("vICMSSubstituto")) {
+                            icms60.setVICMSSubstituto(jsonICMS60.get("vICMSSubstituto").toString());
+                        }
+                        icms60.setVICMSSTRet(jsonICMS60.get("vICMSSTRet").toString());
+                    }
+                    if (jsonICMS60.has("vBCFCPSTRet")) {
+                        icms60.setVBCFCPSTRet(jsonICMS60.get("vBCFCPSTRet").toString());
+                        icms60.setPFCPSTRet(jsonICMS60.get("pFCPSTRet").toString());
+                        icms60.setVFCPSTRet(jsonICMS60.get("vFCPSTRet").toString());
+                    }
+                    if (jsonICMS60.has("pRedBCEfet")) {
+                        icms60.setPRedBCEfet(jsonICMS60.get("pRedBCEfet").toString());
+                        icms60.setVBCEfet(jsonICMS60.get("vBCEfet").toString());
+                        icms60.setPICMSEfet(jsonICMS60.get("pICMSEfet").toString());
+                        icms60.setVICMSEfet(jsonICMS60.get("vICMSEfet").toString());
+                    }
                     icms.setICMS60(icms60);
                 }
                 if (jsonICMS.has("ICMS70")) {
@@ -522,47 +648,193 @@ public class NFCeMonitor {
                     icms70.setVBC(jsonICMS70.get("vBC").toString());
                     icms70.setPICMS(jsonICMS70.get("pICMS").toString());
                     icms70.setVICMS(jsonICMS70.get("vICMS").toString());
-                    icms70.setVBCFCP(jsonICMS70.get("vBCFCP").toString());
-                    icms70.setPFCP(jsonICMS70.get("pFCP").toString());
-                    icms70.setVFCP(jsonICMS70.get("vFCP").toString());
-                    icms70.setModBCST(jsonICMS70.get("modBCST").toString());
-                    icms70.setPMVAST(jsonICMS70.get("pMVAST").toString());
-                    icms70.setPRedBCST(jsonICMS70.get("pRedBCST").toString());
-                    icms70.setVBCST(jsonICMS70.get("vBCST").toString());
-                    icms70.setPICMSST(jsonICMS70.get("pICMSST").toString());
-                    icms70.setVICMSST(jsonICMS70.get("vICMSST").toString());
-                    icms70.setVBCFCPST(jsonICMS70.get("vBCFCPST").toString());
-                    icms70.setPFCPST(jsonICMS70.get("pFCPST").toString());
-                    icms70.setVFCPST(jsonICMS70.get("vFCPST").toString());
-                    icms70.setVICMSDeson(jsonICMS70.get("vICMSDeson").toString());
-                    icms70.setMotDesICMS(jsonICMS70.get("motDesICMS").toString());
+                    if (jsonICMS70.has("vBCFCP")) {
+                        icms70.setVBCFCP(jsonICMS70.get("vBCFCP").toString());
+                        icms70.setPFCP(jsonICMS70.get("pFCP").toString());
+                        icms70.setVFCP(jsonICMS70.get("vFCP").toString());
+                        icms70.setModBCST(jsonICMS70.get("modBCST").toString());
+                        if (jsonICMS70.has("pMVAST")) {
+                            icms70.setPMVAST(jsonICMS70.get("pMVAST").toString());
+                        }
+                        if (jsonICMS70.has("pRedBCST")) {
+                            icms70.setPRedBCST(jsonICMS70.get("pRedBCST").toString());
+                        }
+                        icms70.setVBCST(jsonICMS70.get("vBCST").toString());
+                        icms70.setPICMSST(jsonICMS70.get("pICMSST").toString());
+                        icms70.setVICMSST(jsonICMS70.get("vICMSST").toString());
+                    }
+                    if (jsonICMS70.has("vBCFCPST")) {
+                        icms70.setVBCFCPST(jsonICMS70.get("vBCFCPST").toString());
+                        icms70.setPFCPST(jsonICMS70.get("pFCPST").toString());
+                        icms70.setVFCPST(jsonICMS70.get("vFCPST").toString());
+                    }
+                    if (jsonICMS70.has("vICMSDeson")) {
+                        icms70.setVICMSDeson(jsonICMS70.get("vICMSDeson").toString());
+                        icms70.setMotDesICMS(jsonICMS70.get("motDesICMS").toString());
+                    }
                     icms.setICMS70(icms70);
                 }
                 if (jsonICMS.has("ICMS90")) {
                     ICMS.ICMS90 icms90 = new ICMS.ICMS90();
                     icms90.setOrig(jsonICMS90.get("orig").toString());
                     icms90.setCST(jsonICMS90.get("CST").toString());
-                    icms90.setModBC(jsonICMS90.get("modBC").toString());
-                    icms90.setVBC(jsonICMS90.get("vBC").toString());
-                    icms90.setPICMS(jsonICMS90.get("pICMS").toString());
-                    icms90.setVICMS(jsonICMS90.get("vICMS").toString());
-                    icms90.setVBCFCP(jsonICMS90.get("vBCFCP").toString());
-                    icms90.setPFCP(jsonICMS90.get("pFCP").toString());
-                    icms90.setVFCP(jsonICMS90.get("vFCP").toString());
-                    icms90.setModBCST(jsonICMS90.get("modBCST").toString());
-                    icms90.setPMVAST(jsonICMS90.get("pMVAST").toString());
-                    icms90.setPRedBCST(jsonICMS90.get("pRedBCST").toString());
-                    icms90.setVBCST(jsonICMS90.get("vBCST").toString());
-                    icms90.setPICMSST(jsonICMS90.get("pICMSST").toString());
-                    icms90.setVICMSST(jsonICMS90.get("vICMSST").toString());
-                    icms90.setVBCFCPST(jsonICMS90.get("vBCFCPST").toString());
-                    icms90.setPFCPST(jsonICMS90.get("pFCPST").toString());
-                    icms90.setVFCPST(jsonICMS90.get("vFCPST").toString());
-                    icms90.setVICMSDeson(jsonICMS90.get("vICMSDeson").toString());
-                    icms90.setMotDesICMS(jsonICMS90.get("motDesICMS").toString());
+                    if (jsonICMS90.has("modBC")) {
+                        icms90.setModBC(jsonICMS90.get("modBC").toString());
+                        icms90.setVBC(jsonICMS90.get("vBC").toString());
+                        if (jsonICMS90.has("pRedBC")) {
+                            icms90.setPRedBC(jsonICMS90.get("pRedBC").toString());
+                        }
+                        icms90.setPICMS(jsonICMS90.get("pICMS").toString());
+                        icms90.setVICMS(jsonICMS90.get("vICMS").toString());
+                    }
+                    if (jsonICMS90.has("vBCFCP")) {
+                        icms90.setVBCFCP(jsonICMS90.get("vBCFCP").toString());
+                        icms90.setPFCP(jsonICMS90.get("pFCP").toString());
+                        icms90.setVFCP(jsonICMS90.get("vFCP").toString());
+                    }
+                    if (jsonICMS90.has("modBCST")) {
+                        icms90.setModBCST(jsonICMS90.get("modBCST").toString());
+                        if (jsonICMS90.has("pMVAST")) {
+                            icms90.setPMVAST(jsonICMS90.get("pMVAST").toString());
+                        }
+                        if (jsonICMS90.has("pRedBCST")) {
+                            icms90.setPRedBCST(jsonICMS90.get("pRedBCST").toString());
+                        }
+                        icms90.setVBCST(jsonICMS90.get("vBCST").toString());
+                        icms90.setPICMSST(jsonICMS90.get("pICMSST").toString());
+                        icms90.setVICMSST(jsonICMS90.get("vICMSST").toString());
+                    }
+                    if (jsonICMS90.has("vBCFCPST")) {
+                        icms90.setVBCFCPST(jsonICMS90.get("vBCFCPST").toString());
+                        icms90.setPFCPST(jsonICMS90.get("pFCPST").toString());
+                        icms90.setVFCPST(jsonICMS90.get("vFCPST").toString());
+                    }
+                    if (jsonICMS90.has("vICMSDeson")) {
+                        icms90.setVICMSDeson(jsonICMS90.get("vICMSDeson").toString());
+                        icms90.setMotDesICMS(jsonICMS90.get("motDesICMS").toString());
+                    }
                     icms.setICMS90(icms90);
                 }
-
+                if (jsonICMS.has("ICMSSN101")) {
+                    ICMS.ICMSSN101 icmsSN101 = new ICMS.ICMSSN101();
+                    icmsSN101.setOrig(jsonICMSSN101.get("orig").toString());
+                    icmsSN101.setCSOSN(jsonICMSSN101.get("CSOSN").toString());
+                    icmsSN101.setPCredSN(jsonICMSSN101.get("pCredSN").toString());
+                    icmsSN101.setVCredICMSSN(jsonICMSSN101.get("vCredICMSSN").toString());
+                    icms.setICMSSN101(icmsSN101);
+                }
+                if (jsonICMS.has("ICMSSN102")) {
+                    ICMS.ICMSSN102 icmsSN102 = new ICMS.ICMSSN102();
+                    icmsSN102.setOrig(jsonICMSSN102.get("orig").toString());
+                    icmsSN102.setCSOSN(jsonICMSSN102.get("CSOSN").toString());
+                    icms.setICMSSN102(icmsSN102);
+                }
+                if (jsonICMS.has("ICMSSN201")) {
+                    ICMS.ICMSSN201 icmsSN201 = new ICMS.ICMSSN201();
+                    icmsSN201.setOrig(jsonICMSSN201.get("orig").toString());
+                    icmsSN201.setCSOSN(jsonICMSSN201.get("CSOSN").toString());
+                    icmsSN201.setModBCST(jsonICMSSN201.get("modBCST").toString());
+                    if (jsonICMSSN201.has("pMVAST")) {
+                        icmsSN201.setPMVAST(jsonICMSSN201.get("pMVAST").toString());
+                    }
+                    if (jsonICMSSN201.has("pRedBCST")) {
+                        icmsSN201.setPRedBCST(jsonICMSSN201.get("pRedBCST").toString());
+                    }
+                    icmsSN201.setVBCST(jsonICMSSN201.get("vBCST").toString());
+                    icmsSN201.setPICMSST(jsonICMSSN201.get("pICMSST").toString());
+                    icmsSN201.setVICMSST(jsonICMSSN201.get("vICMSST").toString());
+                    if (jsonICMSSN201.has("vBCFCPST")) {
+                        icmsSN201.setVBCFCPST(jsonICMSSN201.get("vBCFCPST").toString());
+                        icmsSN201.setPFCPST(jsonICMSSN201.get("pFCPST").toString());
+                        icmsSN201.setVFCPST(jsonICMSSN201.get("vFCPST").toString());
+                        icmsSN201.setPCredSN(jsonICMSSN201.get("pCredSN").toString());
+                        icmsSN201.setVCredICMSSN(jsonICMSSN201.get("vCredICMSSN").toString());
+                    }
+                    icms.setICMSSN201(icmsSN201);
+                }
+                if (jsonICMS.has("ICMSSN202")) {
+                    ICMS.ICMSSN202 icmsSN202 = new ICMS.ICMSSN202();
+                    icmsSN202.setOrig(jsonICMSSN202.get("orig").toString());
+                    icmsSN202.setCSOSN(jsonICMSSN202.get("CSOSN").toString());
+                    icmsSN202.setModBCST(jsonICMSSN202.get("modBCST").toString());
+                    if (jsonICMSSN202.has("pMVAST")) {
+                        icmsSN202.setPMVAST(jsonICMSSN202.get("pMVAST").toString());
+                    }
+                    if (jsonICMSSN202.has("pRedBCST")) {
+                        icmsSN202.setPRedBCST(jsonICMSSN202.get("pRedBCST").toString());
+                    }
+                    icmsSN202.setVBCST(jsonICMSSN202.get("vBCST").toString());
+                    icmsSN202.setPICMSST(jsonICMSSN202.get("pICMSST").toString());
+                    icmsSN202.setVICMSST(jsonICMSSN202.get("vICMSST").toString());
+                    if (jsonICMSSN202.has("vBCFCPST")) {
+                        icmsSN202.setVBCFCPST(jsonICMSSN202.get("vBCFCPST").toString());
+                        icmsSN202.setPFCPST(jsonICMSSN202.get("pFCPST").toString());
+                        icmsSN202.setVFCPST(jsonICMSSN202.get("vFCPST").toString());
+                    }
+                    icms.setICMSSN202(icmsSN202);
+                }
+                if (jsonICMS.has("ICMSSN500")) {
+                    ICMS.ICMSSN500 icmsSN500 = new ICMS.ICMSSN500();
+                    icmsSN500.setOrig(jsonICMSSN500.get("orig").toString());
+                    icmsSN500.setCSOSN(jsonICMSSN500.get("CSOSN").toString());
+                    if (jsonICMSSN500.has("vBCSTRet")) {
+                        icmsSN500.setVBCSTRet(jsonICMSSN500.get("vBCSTRet").toString());
+                        icmsSN500.setPST(jsonICMSSN500.get("pST").toString());
+                        if (jsonICMSSN500.has("vICMSSubstituto")) {
+                            icmsSN500.setVICMSSubstituto(jsonICMSSN500.get("vICMSSubstituto").toString());
+                        }
+                        icmsSN500.setVICMSSTRet(jsonICMSSN500.get("vICMSSTRet").toString());
+                    }
+                    if (jsonICMSSN500.has("vBCFCPSTRet")) {
+                        icmsSN500.setVBCFCPSTRet(jsonICMSSN500.get("vBCFCPSTRet").toString());
+                        icmsSN500.setPFCPSTRet(jsonICMSSN500.get("pFCPSTRet").toString());
+                        icmsSN500.setVFCPSTRet(jsonICMSSN500.get("vFCPSTRet").toString());
+                    }
+                    if (jsonICMSSN500.has("pRedBCEfet")) {
+                        icmsSN500.setPRedBCEfet(jsonICMSSN500.get("pRedBCEfet").toString());
+                        icmsSN500.setVBCEfet(jsonICMSSN500.get("vBCEfet").toString());
+                        icmsSN500.setPICMSEfet(jsonICMSSN500.get("pICMSEfet").toString());
+                        icmsSN500.setVICMSEfet(jsonICMSSN500.get("vICMSEfet").toString());
+                    }
+                    icms.setICMSSN500(icmsSN500);
+                }
+                if (jsonICMS.has("ICMSSN900")) {
+                    ICMS.ICMSSN900 icmsSN900 = new ICMS.ICMSSN900();
+                    icmsSN900.setOrig(jsonICMSSN900.get("orig").toString());
+                    icmsSN900.setCSOSN(jsonICMSSN900.get("CSOSN").toString());
+                    if (jsonICMSSN900.has("modBC")) {
+                        icmsSN900.setModBC(jsonICMSSN900.get("modBC").toString());
+                        icmsSN900.setVBC(jsonICMSSN900.get("vBC").toString());
+                        if (jsonICMSSN900.has("pRedBC")) {
+                            icmsSN900.setPRedBC(jsonICMSSN900.get("pRedBC").toString());
+                        }
+                        icmsSN900.setPICMS(jsonICMSSN900.get("pICMS").toString());
+                        icmsSN900.setVICMS(jsonICMSSN900.get("vICMS").toString());
+                    }
+                    if (jsonICMSSN900.has("modBCST")) {
+                        icmsSN900.setModBCST(jsonICMSSN900.get("modBCST").toString());
+                        if (jsonICMSSN900.has("pMVAST")) {
+                            icmsSN900.setPMVAST(jsonICMSSN900.get("pMVAST").toString());
+                        }
+                        if (jsonICMSSN900.has("pRedBCST")) {
+                            icmsSN900.setPRedBCST(jsonICMSSN900.get("pRedBCST").toString());
+                        }
+                        icmsSN900.setVBCST(jsonICMSSN900.get("vBCST").toString());
+                        icmsSN900.setPICMSST(jsonICMSSN900.get("pICMSST").toString());
+                        icmsSN900.setVICMSST(jsonICMSSN900.get("vICMSST").toString());
+                    }
+                    if (jsonICMSSN900.has("vBCFCPST")) {
+                        icmsSN900.setVBCFCPST(jsonICMSSN900.get("vBCFCPST").toString());
+                        icmsSN900.setPFCPST(jsonICMSSN900.get("pFCPST").toString());
+                        icmsSN900.setVFCPST(jsonICMSSN900.get("vFCPST").toString());
+                    }
+                    if (jsonICMSSN900.has("pCredSN")) {
+                        icmsSN900.setPCredSN(jsonICMSSN900.get("pCredSN").toString());
+                        icmsSN900.setVCredICMSSN(jsonICMSSN900.get("vCredICMSSN").toString());
+                    }
+                    icms.setICMSSN900(icmsSN900);
+                }
+                
                 PIS pis = new PIS();
                 PISAliq pisAliq = new PISAliq();
                 pisAliq.setCST(jsonPISAliq.get("CST").toString());
@@ -599,11 +871,20 @@ public class NFCeMonitor {
             icmstot.setVBC(jsonICMSTot.get("vBC").toString());
             icmstot.setVICMS(jsonICMSTot.get("vICMS").toString());
             icmstot.setVICMSDeson(jsonICMSTot.get("vICMSDeson").toString());
+            if (jsonICMSTot.has("vFCPUFDest")) {
+                icmstot.setVFCPUFDest(jsonICMSTot.get("vFCPUFDest").toString());
+            }
+            if (jsonICMSTot.has("vICMSUFDest")) {
+                icmstot.setVICMSUFDest(jsonICMSTot.get("vICMSUFDest").toString());
+            }
+            if (jsonICMSTot.has("vICMSUFRemet")) {
+                icmstot.setVICMSUFRemet(jsonICMSTot.get("vICMSUFRemet").toString());
+            }
             icmstot.setVFCP(jsonICMSTot.get("vFCP").toString());
-            icmstot.setVFCPST(jsonICMSTot.get("vBCST").toString());
-            icmstot.setVFCPSTRet(jsonICMSTot.get("vST").toString());
             icmstot.setVBCST(jsonICMSTot.get("vFCPST").toString());
             icmstot.setVST(jsonICMSTot.get("vFCPSTRet").toString());
+            icmstot.setVFCPST(jsonICMSTot.get("vBCST").toString());
+            icmstot.setVFCPSTRet(jsonICMSTot.get("vST").toString());
             icmstot.setVProd(jsonICMSTot.get("vProd").toString());
             icmstot.setVFrete(jsonICMSTot.get("vFrete").toString());
             icmstot.setVSeg(jsonICMSTot.get("vSeg").toString());
@@ -615,6 +896,9 @@ public class NFCeMonitor {
             icmstot.setVCOFINS(jsonICMSTot.get("vCOFINS").toString());
             icmstot.setVOutro(jsonICMSTot.get("vOutro").toString());
             icmstot.setVNF(jsonICMSTot.get("vNF").toString());
+            if (jsonICMSTot.has("vTotTrib")) {
+                icmstot.setVTotTrib(jsonICMSTot.get("vTotTrib").toString());
+            }
             total.setICMSTot(icmstot);
 
             infNFe.setTotal(total);
@@ -640,8 +924,8 @@ public class NFCeMonitor {
                     JSONObject jsonCard = jsonDetPag.getJSONObject("card");
 
                     Pag.DetPag.Card card = new Pag.DetPag.Card();
-                    card.setTpIntegra(jsonCard.get("tpIntegra").toString());
                     card.setCNPJ(jsonCard.get("CNPJ").toString());
+                    card.setTpIntegra(jsonCard.get("tpIntegra").toString());
                     card.setTBand(jsonCard.get("tBand").toString());
                     card.setCAut(jsonCard.get("cAut").toString());
                     detPag.setCard(card);
@@ -650,10 +934,14 @@ public class NFCeMonitor {
             }
 
             infNFe.setPag(pag);
+            
+            if (jsonInfNFe.has("infAdic")) {
+                JSONObject jsonInfAdic = jsonInfNFe.getJSONObject("infAdic");
 
-            InfAdic infAdic = new InfAdic();
-            infAdic.setInfCpl(jsonInfAdic.get("infCpl").toString());
-            infNFe.setInfAdic(infAdic);
+                InfAdic infAdic = new InfAdic();
+                infAdic.setInfCpl(jsonInfAdic.get("infCpl").toString());
+                infNFe.setInfAdic(infAdic);
+            }
 
             TNFe nfe = new TNFe();
             nfe.setInfNFe(infNFe);
