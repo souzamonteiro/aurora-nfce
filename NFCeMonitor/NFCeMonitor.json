@@ -10,5 +10,6 @@
     "caminhoCertificado": "/home/roberto/certificados/33630582000149.pfx",
     "senhaCertificado": "1234",
     "caminhoXML": "/home/roberto/xml",
-    "retornarDANFE": "0"
+    "retornarDANFE": "0",
+    "simularContingencia": "0"
 }

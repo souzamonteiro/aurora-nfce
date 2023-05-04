@@ -47,14 +47,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -67,7 +64,6 @@ import com.sun.net.httpserver.HttpServer;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.json.XML;
 
 /**
  * Emissor de NFC-e.
@@ -150,6 +146,10 @@ public class NFCeMonitor {
             String webserviceConsulta = configuracoes.get("webserviceConsulta").toString();
             String caminhoXML = configuracoes.get("caminhoXML").toString();
             String retornarDANFE = configuracoes.get("retornarDANFE").toString();
+            String simularContingencia = "0";
+            if (configuracoes.has("simularContingencia")) {
+                simularContingencia = configuracoes.get("simularContingencia").toString();
+            }
             
             InputStream inputStream = httpExchange.getRequestBody(); 
             Scanner scanner = new Scanner(inputStream);
@@ -163,11 +163,10 @@ public class NFCeMonitor {
             
             JSONObject json = new JSONObject(dados);
             
-            String status = "";
-            String motivo = "";
-            String protocolo = "";
+            String cStat = "";
+            String xMotivo = "";
+            String nProt = "";
             String xml = "";
-            String danfePDF = "";
             
             /*
              * Prepara o XML da NFC-e.
@@ -181,13 +180,13 @@ public class NFCeMonitor {
             } catch (Exception e) {
                 System.out.println(e.getMessage());
                 
-                status = "000";
-                motivo = e.getMessage();
+                cStat = "000";
+                xMotivo = e.getMessage();
                 
                 JSONObject responseJSON = new JSONObject();
-                responseJSON.put("status", status);
-                responseJSON.put("motivo", motivo);
-                responseJSON.put("protocolo", protocolo);
+                responseJSON.put("cStat", cStat);
+                responseJSON.put("xMotivo", xMotivo);
+                responseJSON.put("nProt", nProt);
                 responseJSON.put("xml", xml);
 
                 System.out.println(responseJSON.toString());
@@ -953,6 +952,9 @@ public class NFCeMonitor {
             enviNFe.setIndSinc("1");
             enviNFe.getNFe().add(nfe);
             
+            // Monta a EnviNfe para contingência pois após assinada não podemos mais modificar a EnviNfe.
+            TEnviNFe enviNFeContingencia = enviNFe;
+            
             try {
                 // Monta e Assina o XML.
                 enviNFe = Nfe.montaNfe(config, enviNFe, true);
@@ -981,7 +983,7 @@ public class NFCeMonitor {
                     TRetConsReciNFe retornoNfe = null;
 
                     // Realiza a consulta diversas vezes.
-                    while (tentativa < 15) {
+                    while (tentativa < 10) {
                         retornoNfe = Nfe.consultaRecibo(config, recibo, DocumentoEnum.NFE);
                         if (retornoNfe.getCStat().equals(StatusEnum.LOTE_EM_PROCESSAMENTO.getCodigo())) {
                             System.out.println("INFO: Lote Em Processamento, vai tentar novamente apos 1 Segundo.");
@@ -994,43 +996,32 @@ public class NFCeMonitor {
 
                     RetornoUtil.validaAssincrono(retornoNfe);
                     
-                    status = retornoNfe.getProtNFe().get(0).getInfProt().getCStat();
-                    motivo = retornoNfe.getProtNFe().get(0).getInfProt().getXMotivo();
+                    cStat = retornoNfe.getProtNFe().get(0).getInfProt().getCStat();
+                    xMotivo = retornoNfe.getProtNFe().get(0).getInfProt().getXMotivo();
                     
-                    System.out.println("Status: " + status + " - " + motivo);
-                    if (status.equals("100")) {
-                        protocolo = retornoNfe.getProtNFe().get(0).getInfProt().getNProt();
+                    System.out.println("cStat: " + cStat + " - " + xMotivo);
+                    if (cStat.equals("100")) {
+                        nProt = retornoNfe.getProtNFe().get(0).getInfProt().getNProt();
                         xml = XmlNfeUtil.criaNfeProc(enviNFe, retornoNfe.getProtNFe().get(0));
                         
                         // Salva o XML da NFC-e.
                         FileWriter writer = new FileWriter(caminhoXML + "/NFe" + chave + ".xml");
                         writer.write(xml);
                         writer.close();      
-                       
-                        // Utiliza layout de impressão padrão.
-                        Impressao impressao = ImpressaoUtil.impressaoPadraoNFCe(xml, webserviceConsulta);
-
-                        // Faz a impressão do DANFE em formato PDF.
-                        ImpressaoService.impressaoPdfArquivo(impressao, caminhoXML + "/NFe" + chave + ".pdf");
                         
-                        if (retornarDANFE.equals("1")) {
-                            byte[] bytes = Files.readAllBytes(Paths.get(caminhoXML + "/NFe" + chave + ".pdf"));
-                            byte[] encoded = java.util.Base64.getEncoder().encode(bytes);
-                            danfePDF = new String(encoded);
-                        }
-                        System.out.println("Protocolo: " + protocolo);
+                        System.out.println("Protocolo: " + nProt);
                         System.out.println("XML Final: " + xml);
                     }
                 } else {
                     // Retorno síncrono.
                     RetornoUtil.validaSincrono(retorno);
                     
-                    status = retorno.getProtNFe().getInfProt().getCStat();
-                    motivo = retorno.getProtNFe().getInfProt().getXMotivo();
+                    cStat = retorno.getProtNFe().getInfProt().getCStat();
+                    xMotivo = retorno.getProtNFe().getInfProt().getXMotivo();
                     
-                    System.out.println("Status: " + status + " - " + motivo);
-                    if (status.equals("100")) {
-                        protocolo = retorno.getProtNFe().getInfProt().getNProt();
+                    System.out.println("cStat: " + cStat + " - " + xMotivo);
+                    if (cStat.equals("100")) {
+                        nProt = retorno.getProtNFe().getInfProt().getNProt();
                         xml = XmlNfeUtil.criaNfeProc(enviNFe, retorno.getProtNFe());
                         
                         // Salva o XML da NFC-e.
@@ -1038,35 +1029,104 @@ public class NFCeMonitor {
                         writer.write(xml);
                         writer.close();      
                        
-                        // Utiliza layout de impressão padrão.
-                        Impressao impressao = ImpressaoUtil.impressaoPadraoNFCe(xml, webserviceConsulta);
-
-                        // Faz a impressão do DANFE em formato PDF.
-                        ImpressaoService.impressaoPdfArquivo(impressao, caminhoXML + "/NFe" + chave + ".pdf");
-                        
-                        if (retornarDANFE.equals("1")) {
-                            byte[] bytes = Files.readAllBytes(Paths.get(caminhoXML + "/NFe" + chave + ".pdf"));
-                            byte[] encoded = java.util.Base64.getEncoder().encode(bytes);
-                            danfePDF = new String(encoded);
-                        }
-                        
-                        System.out.println("Protocolo: " + protocolo);
+                        System.out.println("Protocolo: " + nProt);
                         System.out.println("XML Final: " + xml);
+                    }
+                }
+                
+                if (simularContingencia.equals("1")) {
+                    cStat = "000";
+                    xMotivo = "Time out";
+                    nProt = "";
+                    
+                    // Tipo da emissão contingência: tpEmis = "9".
+                    tipoEmissao = "9";
+                    chaveUtil = new ChaveUtil(config.getEstado(), cnpj, modelo, serie, numeroNFCe, tipoEmissao, cnf, dataEmissao);
+                    chave = chaveUtil.getChaveNF();
+                    cdv = chaveUtil.getDigitoVerificador();
+                    enviNFeContingencia.getNFe().get(0).getInfNFe().setId(chave);
+                    enviNFeContingencia.getNFe().get(0).getInfNFe().getIde().setTpEmis(tipoEmissao);
+                    enviNFeContingencia.getNFe().get(0).getInfNFe().getIde().setCDV(cdv);
+
+                    String dhCont = XmlNfeUtil.dataNfe(dataEmissao);
+                    String xJust = "Erro ao tentar enviar o XML da NF-e para a SEFAZ";
+                    enviNFeContingencia.getNFe().get(0).getInfNFe().getIde().setDhCont(dhCont);
+                    enviNFeContingencia.getNFe().get(0).getInfNFe().getIde().setXJust(xJust);
+
+                    try {
+                        enviNFeContingencia = Nfe.montaNfe(config, enviNFeContingencia, true);
+
+                        qrCode = preencheQRCodeContingencia(enviNFeContingencia, config, idToken, csc);
+                        infNFeSupl = new TNFe.InfNFeSupl();
+                        infNFeSupl.setQrCode(qrCode);
+                        infNFeSupl.setUrlChave(WebServiceUtil.getUrl(config, DocumentoEnum.NFCE, ServicosEnum.URL_CONSULTANFCE));
+                        enviNFeContingencia.getNFe().get(0).setInfNFeSupl(infNFeSupl);
+
+                        xml = XmlNfeUtil.objectToXml(enviNFeContingencia.getNFe().get(0), config.getEncode());
+
+                        System.out.println("XML Final: " + xml);
+
+                        // Salva o XML da NFC-e.
+                        FileWriter writer = new FileWriter(caminhoXML + "/NFe" + chave + ".xml");
+                        writer.write(xml);
+                        writer.close();
+                    } catch (Exception error) {
+                        System.out.println(error.getMessage());
+
+                        cStat = "000";
+                        xMotivo = error.getMessage();
                     }
                 }
             } catch (Exception e) {
                 System.out.println(e.getMessage());
                 
-                status = "000";
-                motivo = e.getMessage();
+                cStat = "000";
+                xMotivo = e.getMessage();
+                
+                // Tipo da emissão contingência: tpEmis = "9".
+                tipoEmissao = "9";
+                chaveUtil = new ChaveUtil(config.getEstado(), cnpj, modelo, serie, numeroNFCe, tipoEmissao, cnf, dataEmissao);
+                chave = chaveUtil.getChaveNF();
+                cdv = chaveUtil.getDigitoVerificador();
+                enviNFeContingencia.getNFe().get(0).getInfNFe().setId(chave);
+                enviNFeContingencia.getNFe().get(0).getInfNFe().getIde().setTpEmis(tipoEmissao);
+                enviNFeContingencia.getNFe().get(0).getInfNFe().getIde().setCDV(cdv);
+                
+                String dhCont = XmlNfeUtil.dataNfe(dataEmissao);
+                String xJust = "Erro ao tentar enviar o XML da NF-e para a SEFAZ";
+                enviNFeContingencia.getNFe().get(0).getInfNFe().getIde().setDhCont(dhCont);
+                enviNFeContingencia.getNFe().get(0).getInfNFe().getIde().setXJust(xJust);
+                
+                try {
+                    enviNFeContingencia = Nfe.montaNfe(config, enviNFeContingencia, true);
+
+                    String qrCode = preencheQRCodeContingencia(enviNFeContingencia, config, idToken, csc);
+                    TNFe.InfNFeSupl infNFeSupl = new TNFe.InfNFeSupl();
+                    infNFeSupl.setQrCode(qrCode);
+                    infNFeSupl.setUrlChave(WebServiceUtil.getUrl(config, DocumentoEnum.NFCE, ServicosEnum.URL_CONSULTANFCE));
+                    enviNFeContingencia.getNFe().get(0).setInfNFeSupl(infNFeSupl);
+                    
+                    xml = XmlNfeUtil.objectToXml(enviNFeContingencia.getNFe().get(0), config.getEncode());
+                    
+                    System.out.println("XML Final: " + xml);
+                    
+                    // Salva o XML da NFC-e.
+                    FileWriter writer = new FileWriter(caminhoXML + "/NFe" + chave + ".xml");
+                    writer.write(xml);
+                    writer.close();
+                } catch (Exception error) {
+                    System.out.println(error.getMessage());
+                    
+                    cStat = "000";
+                    xMotivo = error.getMessage();
+                }
             }
             
             JSONObject responseJSON = new JSONObject();
-            responseJSON.put("status", status);
-            responseJSON.put("motivo", motivo);
-            responseJSON.put("protocolo", protocolo);
+            responseJSON.put("cStat", cStat);
+            responseJSON.put("xMotivo", xMotivo);
+            responseJSON.put("nProt", nProt);
             responseJSON.put("xml", xml);
-            responseJSON.put("danfePDF", danfePDF);
             
             System.out.println(responseJSON.toString());
             
