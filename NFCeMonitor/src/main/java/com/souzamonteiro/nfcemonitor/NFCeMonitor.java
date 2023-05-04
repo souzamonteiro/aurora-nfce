@@ -47,6 +47,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.Base64;
@@ -146,6 +148,7 @@ public class NFCeMonitor {
             String webserviceAmbiente = configuracoes.get("webserviceAmbiente").toString();
             String webserviceConsulta = configuracoes.get("webserviceConsulta").toString();
             String caminhoXML = configuracoes.get("caminhoXML").toString();
+            String retornarDANFE = configuracoes.get("retornarDANFE").toString();
             
             InputStream inputStream = httpExchange.getRequestBody(); 
             Scanner scanner = new Scanner(inputStream);
@@ -160,431 +163,509 @@ public class NFCeMonitor {
             JSONObject json = new JSONObject(dados);
             System.out.println(json.toString());
             
-            /*
-             * Prepara o XML da NFC-e.
-             */
             String status = "";
             String motivo = "";
             String protocolo = "";
             String xml = "";
-
+            String danfePDF = "";
+            
+            /*
+             * Prepara o XML da NFC-e.
+             */
+            
+            // Inicia As configurações.
+            ConfiguracoesNfe config;
+            
             try {
-                // Inicia As configurações.
-                ConfiguracoesNfe config = Config.iniciaConfiguracoes();
+                config = Config.iniciaConfiguracoes();
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
                 
-                JSONObject jsonInfNFe = json.getJSONObject("infNFe");
-                JSONObject jsonIde = jsonInfNFe.getJSONObject("ide");
-                JSONObject jsonEmit = jsonInfNFe.getJSONObject("emit");
-                JSONObject jsonEnderEmit = jsonEmit.getJSONObject("enderEmit");
-                JSONObject jsonDest = jsonInfNFe.getJSONObject("dest");
-                JSONObject jsonEnderDest = jsonDest.getJSONObject("enderDest");
-                JSONObject jsonAutXML = jsonInfNFe.getJSONObject("autXML");
-                JSONArray jsonDet = jsonInfNFe.getJSONArray("det");
-                JSONObject jsonTotal = jsonInfNFe.getJSONObject("total");
-                JSONObject jsonICMSTot = jsonTotal.getJSONObject("ICMSTot");
-                JSONObject jsonTransp = jsonInfNFe.getJSONObject("transp");
-                JSONArray jsonPag = jsonInfNFe.getJSONArray("pag");
-                JSONObject jsonInfAdic = jsonInfNFe.getJSONObject("infAdic");
+                status = "000";
+                motivo = e.getMessage();
                 
-                // Numero da NFC-e.
-                String nNF = jsonIde.get("nNF").toString();
-                String cNF = jsonIde.get("cNF").toString();
+                JSONObject responseJSON = new JSONObject();
+                responseJSON.put("status", status);
+                responseJSON.put("motivo", motivo);
+                responseJSON.put("protocolo", protocolo);
+                responseJSON.put("xml", xml);
+
+                System.out.println(responseJSON.toString());
+
+                String response = responseJSON.toString();
+                httpExchange.sendResponseHeaders(200, response.length());
+                OutputStream outputStream = httpExchange.getResponseBody();
+                outputStream.write(response.getBytes());
+                outputStream.close();
                 
-                int numeroNFCe = Integer.parseInt(nNF);
-                int numeroCNF = Integer.parseInt(cNF);
-                // Formata o CNF NFC-e com 8 digitos.
-                String cnf = ChaveUtil.completarComZerosAEsquerda(String.valueOf(numeroCNF), 8);
-                
-                // CNPJ do emitente da NFC-e.
-                String cnpj = jsonEmit.get("CNPJ").toString();
-                // IE do emitente da NFC-e
-                String ie = jsonEmit.get("IE").toString();
-                
-                // Data de emissão da NFC-e.
-                LocalDateTime dataEmissao = LocalDateTime.now();
-                // Modelo da NFC-e.
-                String modelo = DocumentoEnum.NFCE.getModelo();
-                // Série da NFC-e.
-                int serie = Integer.parseInt(jsonIde.get("serie").toString());
-                // Tipo de emissao da NFC-e.
-                String tipoEmissao = jsonIde.get("tpEmis").toString();
-                
-                // Id do token de emissão da NFC-e..
-                String idToken = configuracoes.get("idToken").toString();
-                // CSC da NFC-e.
-                String csc = configuracoes.get("CSC").toString();
+                return;
+            }
+            
+            JSONObject jsonInfNFe = json.getJSONObject("infNFe");
+            JSONObject jsonIde = jsonInfNFe.getJSONObject("ide");
+            JSONObject jsonEmit = jsonInfNFe.getJSONObject("emit");
+            JSONObject jsonEnderEmit = jsonEmit.getJSONObject("enderEmit");
+            JSONObject jsonDest = jsonInfNFe.getJSONObject("dest");
+            JSONObject jsonEnderDest = jsonDest.getJSONObject("enderDest");
+            JSONObject jsonAutXML = jsonInfNFe.getJSONObject("autXML");
+            JSONArray jsonDet = jsonInfNFe.getJSONArray("det");
+            JSONObject jsonTotal = jsonInfNFe.getJSONObject("total");
+            JSONObject jsonICMSTot = jsonTotal.getJSONObject("ICMSTot");
+            JSONObject jsonTransp = jsonInfNFe.getJSONObject("transp");
+            JSONArray jsonPag = jsonInfNFe.getJSONArray("pag");
+            JSONObject jsonInfAdic = jsonInfNFe.getJSONObject("infAdic");
 
-                // Chave da NFC-e.
-                ChaveUtil chaveUtil = new ChaveUtil(config.getEstado(), cnpj, modelo, serie, numeroNFCe, tipoEmissao, cnf, dataEmissao);
-                String chave = chaveUtil.getChaveNF();
-                String cdv = chaveUtil.getDigitoVerificador();
+            // Numero da NFC-e.
+            String nNF = jsonIde.get("nNF").toString();
+            String cNF = jsonIde.get("cNF").toString();
 
-                InfNFe infNFe = new InfNFe();
-                infNFe.setId(chave);
-                infNFe.setVersao(ConstantesUtil.VERSAO.NFE);
+            int numeroNFCe = Integer.parseInt(nNF);
+            int numeroCNF = Integer.parseInt(cNF);
+            // Formata o CNF NFC-e com 8 digitos.
+            String cnf = ChaveUtil.completarComZerosAEsquerda(String.valueOf(numeroCNF), 8);
 
-                // Preenche a IDE.
-                Ide ide = new Ide();
-                ide.setCUF(config.getEstado().getCodigoUF());
-                ide.setCNF(cnf);
-                ide.setNatOp(jsonIde.get("natOp").toString());
-                ide.setMod(modelo);
-                ide.setSerie(String.valueOf(serie));
+            // CNPJ do emitente da NFC-e.
+            String cnpj = jsonEmit.get("CNPJ").toString();
+            // IE do emitente da NFC-e
+            String ie = jsonEmit.get("IE").toString();
 
-                ide.setNNF(String.valueOf(numeroNFCe));
-                ide.setDhEmi(XmlNfeUtil.dataNfe(dataEmissao));
-                ide.setTpNF(jsonIde.get("tpNF").toString());
-                ide.setIdDest(jsonIde.get("idDest").toString());
-                ide.setCMunFG(jsonIde.get("cMunFG").toString());
-                ide.setTpImp(jsonIde.get("tpImp").toString());
-                ide.setTpEmis(tipoEmissao);
-                ide.setCDV(cdv);
-                ide.setTpAmb(config.getAmbiente().getCodigo());
-                ide.setFinNFe(jsonIde.get("finNFe").toString());
-                ide.setIndFinal(jsonIde.get("indFinal").toString());
-                ide.setIndPres(jsonIde.get("indPres").toString());
-                ide.setProcEmi(jsonIde.get("procEmi").toString());
-                ide.setVerProc(jsonIde.get("verProc").toString());
+            // Data de emissão da NFC-e.
+            LocalDateTime dataEmissao = LocalDateTime.now();
+            // Modelo da NFC-e.
+            String modelo = DocumentoEnum.NFCE.getModelo();
+            // Série da NFC-e.
+            int serie = Integer.parseInt(jsonIde.get("serie").toString());
+            // Tipo de emissao da NFC-e.
+            String tipoEmissao = jsonIde.get("tpEmis").toString();
 
-                infNFe.setIde(ide);
+            // Id do token de emissão da NFC-e..
+            String idToken = configuracoes.get("idToken").toString();
+            // CSC da NFC-e.
+            String csc = configuracoes.get("CSC").toString();
 
-                // Preenche o Emitente.
-                Emit emit = new Emit();
-                emit.setCNPJ(cnpj);
-                emit.setIE(ie);
-                emit.setXNome(jsonEmit.get("xNome").toString());
+            // Chave da NFC-e.
+            ChaveUtil chaveUtil = new ChaveUtil(config.getEstado(), cnpj, modelo, serie, numeroNFCe, tipoEmissao, cnf, dataEmissao);
+            String chave = chaveUtil.getChaveNF();
+            String cdv = chaveUtil.getDigitoVerificador();
 
-                TEnderEmi enderEmit = new TEnderEmi();
-                enderEmit.setXLgr(jsonEnderEmit.get("xLgr").toString());
-                enderEmit.setNro(jsonEnderEmit.get("nro").toString());
-                enderEmit.setXCpl(jsonEnderEmit.get("xCpl").toString());
-                enderEmit.setXBairro(jsonEnderEmit.get("xBairro").toString());
-                enderEmit.setCMun(jsonEnderEmit.get("cMun").toString());
-                enderEmit.setXMun(jsonEnderEmit.get("xMun").toString());
-                enderEmit.setUF(TUfEmi.valueOf(config.getEstado().toString()));
-                enderEmit.setCEP(jsonEnderEmit.get("CEP").toString());
-                enderEmit.setCPais(jsonEnderEmit.get("cPais").toString());
-                enderEmit.setXPais(jsonEnderEmit.get("xPais").toString());
-                enderEmit.setFone(jsonEnderEmit.get("fone").toString());
-                emit.setEnderEmit(enderEmit);
+            InfNFe infNFe = new InfNFe();
+            infNFe.setId(chave);
+            infNFe.setVersao(ConstantesUtil.VERSAO.NFE);
 
-                emit.setCRT(jsonEmit.get("CRT").toString());
-                
-                infNFe.setEmit(emit);
+            // Preenche a IDE.
+            Ide ide = new Ide();
+            ide.setCUF(config.getEstado().getCodigoUF());
+            ide.setCNF(cnf);
+            ide.setNatOp(jsonIde.get("natOp").toString());
+            ide.setMod(modelo);
+            ide.setSerie(String.valueOf(serie));
 
-                // Preenche o Destinatario.
-                Dest dest = new Dest();
-                dest.setCPF(jsonDest.get("CPF").toString());
-                
+            ide.setNNF(String.valueOf(numeroNFCe));
+            ide.setDhEmi(XmlNfeUtil.dataNfe(dataEmissao));
+            ide.setTpNF(jsonIde.get("tpNF").toString());
+            ide.setIdDest(jsonIde.get("idDest").toString());
+            ide.setCMunFG(jsonIde.get("cMunFG").toString());
+            ide.setTpImp(jsonIde.get("tpImp").toString());
+            ide.setTpEmis(tipoEmissao);
+            ide.setCDV(cdv);
+            ide.setTpAmb(config.getAmbiente().getCodigo());
+            ide.setFinNFe(jsonIde.get("finNFe").toString());
+            ide.setIndFinal(jsonIde.get("indFinal").toString());
+            ide.setIndPres(jsonIde.get("indPres").toString());
+            ide.setProcEmi(jsonIde.get("procEmi").toString());
+            ide.setVerProc(jsonIde.get("verProc").toString());
+
+            infNFe.setIde(ide);
+
+            // Preenche o Emitente.
+            Emit emit = new Emit();
+            emit.setCNPJ(cnpj);
+            emit.setIE(ie);
+            emit.setXNome(jsonEmit.get("xNome").toString());
+
+            TEnderEmi enderEmit = new TEnderEmi();
+            enderEmit.setXLgr(jsonEnderEmit.get("xLgr").toString());
+            enderEmit.setNro(jsonEnderEmit.get("nro").toString());
+            enderEmit.setXCpl(jsonEnderEmit.get("xCpl").toString());
+            enderEmit.setXBairro(jsonEnderEmit.get("xBairro").toString());
+            enderEmit.setCMun(jsonEnderEmit.get("cMun").toString());
+            enderEmit.setXMun(jsonEnderEmit.get("xMun").toString());
+            enderEmit.setUF(TUfEmi.valueOf(config.getEstado().toString()));
+            enderEmit.setCEP(jsonEnderEmit.get("CEP").toString());
+            enderEmit.setCPais(jsonEnderEmit.get("cPais").toString());
+            enderEmit.setXPais(jsonEnderEmit.get("xPais").toString());
+            enderEmit.setFone(jsonEnderEmit.get("fone").toString());
+            emit.setEnderEmit(enderEmit);
+
+            emit.setCRT(jsonEmit.get("CRT").toString());
+
+            infNFe.setEmit(emit);
+
+            // Preenche o Destinatario.
+            Dest dest = new Dest();
+            dest.setCPF(jsonDest.get("CPF").toString());
+
+            if (webserviceAmbiente.equals("2")) {
+                dest.setXNome("NF-E EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL");
+            } else {
+                dest.setXNome(jsonDest.get("xNome").toString());
+            }
+            TEndereco enderDest = new TEndereco();
+            enderDest.setXLgr(jsonEnderDest.get("xLgr").toString());
+            enderDest.setNro(jsonEnderDest.get("nro").toString());
+            enderDest.setXBairro(jsonEnderDest.get("xBairro").toString());
+            enderDest.setCMun(jsonEnderDest.get("cMun").toString());
+            enderDest.setXMun(jsonEnderDest.get("xMun").toString());
+            enderDest.setUF(TUf.valueOf(jsonEnderDest.get("UF").toString()));
+            enderDest.setCEP(jsonEnderDest.get("CEP").toString());
+            enderDest.setCPais(jsonEnderDest.get("cPais").toString());
+            enderDest.setXPais(jsonEnderDest.get("xPais").toString());
+            enderDest.setFone(jsonEnderDest.get("fone").toString());
+            dest.setEnderDest(enderDest);
+            dest.setIndIEDest("9");
+
+            infNFe.setDest(dest);
+
+            // Preenche os dados do contador.
+            AutXML autXML = new AutXML();
+            autXML.setCNPJ(jsonAutXML.get("CNPJ").toString());
+            infNFe.getAutXML().add(autXML);
+
+            // Preenche os dados do Produto da NFC-e e adiciona à lista de produtos.
+            for(int i = 0; i < jsonDet.length(); i++){
+                JSONObject itemDet = jsonDet.getJSONObject(i);
+
+                JSONObject jsonProd = itemDet.getJSONObject("prod");
+                JSONObject jsonImposto = itemDet.getJSONObject("imposto");
+                JSONObject jsonICMS = jsonImposto.getJSONObject("ICMS");
+                JSONObject jsonICMS00 = new JSONObject();
+                JSONObject jsonICMS10 = new JSONObject();
+                JSONObject jsonICMS20 = new JSONObject();
+                JSONObject jsonICMS30 = new JSONObject();
+                JSONObject jsonICMS40 = new JSONObject();
+                JSONObject jsonICMS51 = new JSONObject();
+                JSONObject jsonICMS60 = new JSONObject();
+                JSONObject jsonICMS70 = new JSONObject();
+                JSONObject jsonICMS90 = new JSONObject();
+                if (jsonICMS.has("ICMS00")) {
+                    jsonICMS00 = jsonICMS.getJSONObject("ICMS00");
+                }
+                if (jsonICMS.has("ICMS10")) {
+                    jsonICMS10 = jsonICMS.getJSONObject("ICMS10");
+                }
+                if (jsonICMS.has("ICMS20")) {
+                    jsonICMS20 = jsonICMS.getJSONObject("ICMS20");
+                }
+                if (jsonICMS.has("ICMS30")) {
+                    jsonICMS30 = jsonICMS.getJSONObject("ICMS30");
+                }
+                if (jsonICMS.has("ICMS40")) {
+                    jsonICMS40 = jsonICMS.getJSONObject("ICMS40");
+                }
+                if (jsonICMS.has("ICMS51")) {
+                    jsonICMS51= jsonICMS.getJSONObject("ICMS51");
+                }
+                if (jsonICMS.has("ICMS60")) {
+                    jsonICMS60 = jsonICMS.getJSONObject("ICMS60");
+                }
+                if (jsonICMS.has("ICMS70")) {
+                    jsonICMS70 = jsonICMS.getJSONObject("ICMS70");
+                }
+                if (jsonICMS.has("ICMS90")) {
+                    jsonICMS90 = jsonICMS.getJSONObject("ICMS90");
+                }
+                JSONObject jsonPIS = jsonImposto.getJSONObject("PIS");
+                JSONObject jsonPISAliq = jsonPIS.getJSONObject("PISAliq");
+                JSONObject jsonCOFINS = jsonImposto.getJSONObject("COFINS");
+                JSONObject jsonCOFINSAliq = jsonCOFINS.getJSONObject("COFINSAliq");
+
+                int n = i + 1;
+
+                Det det = new Det();
+
+                // O numero do item.
+                det.setNItem(Integer.toString(n));
+
+                // Preenche os dados dos Produtos.
+                Prod prod = new Prod();
+                prod.setCProd(jsonProd.get("cProd").toString());
+                prod.setCEAN(jsonProd.get("cEAN").toString());
                 if (webserviceAmbiente.equals("2")) {
-                    dest.setXNome("NF-E EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL");
+                    prod.setXProd("NOTA FISCAL EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL");
                 } else {
-                    dest.setXNome(jsonDest.get("xNome").toString());
+                    prod.setXProd(jsonProd.get("xProd").toString());
                 }
-                TEndereco enderDest = new TEndereco();
-                enderDest.setXLgr(jsonEnderDest.get("xLgr").toString());
-                enderDest.setNro(jsonEnderDest.get("nro").toString());
-                enderDest.setXBairro(jsonEnderDest.get("xBairro").toString());
-                enderDest.setCMun(jsonEnderDest.get("cMun").toString());
-                enderDest.setXMun(jsonEnderDest.get("xMun").toString());
-                enderDest.setUF(TUf.valueOf(jsonEnderDest.get("UF").toString()));
-                enderDest.setCEP(jsonEnderDest.get("CEP").toString());
-                enderDest.setCPais(jsonEnderDest.get("cPais").toString());
-                enderDest.setXPais(jsonEnderDest.get("xPais").toString());
-                enderDest.setFone(jsonEnderDest.get("fone").toString());
-                dest.setEnderDest(enderDest);
-                dest.setIndIEDest("9");
-                
-                infNFe.setDest(dest);
+                prod.setNCM(jsonProd.get("NCM").toString());
+                prod.setCEST(jsonProd.get("CEST").toString());
+                prod.setIndEscala(jsonProd.get("indEscala").toString());
+                prod.setCFOP(jsonProd.get("CFOP").toString());
+                prod.setUCom(jsonProd.get("uCom").toString());
+                prod.setQCom(jsonProd.get("qCom").toString());
+                prod.setVUnCom(jsonProd.get("vUnCom").toString());
+                prod.setVProd(jsonProd.get("vProd").toString());
+                prod.setCEANTrib(jsonProd.get("cEANTrib").toString());
+                prod.setUTrib(jsonProd.get("uTrib").toString());
+                prod.setQTrib(jsonProd.get("qTrib").toString());
+                prod.setVUnTrib(jsonProd.get("vUnTrib").toString());
+                prod.setIndTot(jsonProd.get("indTot").toString());
 
-                // Preenche os dados do contador.
-                AutXML autXML = new AutXML();
-                autXML.setCNPJ(jsonAutXML.get("CNPJ").toString());
-                infNFe.getAutXML().add(autXML);
+                det.setProd(prod);
 
-                // Preenche os dados do Produto da NFC-e e adiciona à lista de produtos.
-                for(int i = 0; i < jsonDet.length(); i++){
-                    JSONObject itemDet = jsonDet.getJSONObject(i);
-                    
-                    JSONObject jsonProd = itemDet.getJSONObject("prod");
-                    JSONObject jsonImposto = itemDet.getJSONObject("imposto");
-                    JSONObject jsonICMS = jsonImposto.getJSONObject("ICMS");
-                    JSONObject jsonICMS00 = new JSONObject();
-                    JSONObject jsonICMS10 = new JSONObject();
-                    JSONObject jsonICMS20 = new JSONObject();
-                    JSONObject jsonICMS30 = new JSONObject();
-                    JSONObject jsonICMS40 = new JSONObject();
-                    JSONObject jsonICMS51 = new JSONObject();
-                    JSONObject jsonICMS60 = new JSONObject();
-                    JSONObject jsonICMS70 = new JSONObject();
-                    JSONObject jsonICMS90 = new JSONObject();
-                    if (jsonICMS.has("ICMS00")) {
-                        jsonICMS00 = jsonICMS.getJSONObject("ICMS00");
-                    }
-                    if (jsonICMS.has("ICMS10")) {
-                        jsonICMS10 = jsonICMS.getJSONObject("ICMS10");
-                    }
-                    if (jsonICMS.has("ICMS20")) {
-                        jsonICMS20 = jsonICMS.getJSONObject("ICMS20");
-                    }
-                    if (jsonICMS.has("ICMS30")) {
-                        jsonICMS30 = jsonICMS.getJSONObject("ICMS30");
-                    }
-                    if (jsonICMS.has("ICMS40")) {
-                        jsonICMS40 = jsonICMS.getJSONObject("ICMS40");
-                    }
-                    if (jsonICMS.has("ICMS51")) {
-                        jsonICMS51= jsonICMS.getJSONObject("ICMS51");
-                    }
-                    if (jsonICMS.has("ICMS60")) {
-                        jsonICMS60 = jsonICMS.getJSONObject("ICMS60");
-                    }
-                    if (jsonICMS.has("ICMS70")) {
-                        jsonICMS70 = jsonICMS.getJSONObject("ICMS70");
-                    }
-                    if (jsonICMS.has("ICMS90")) {
-                        jsonICMS90 = jsonICMS.getJSONObject("ICMS90");
-                    }
-                    JSONObject jsonPIS = jsonImposto.getJSONObject("PIS");
-                    JSONObject jsonPISAliq = jsonPIS.getJSONObject("PISAliq");
-                    JSONObject jsonCOFINS = jsonImposto.getJSONObject("COFINS");
-                    JSONObject jsonCOFINSAliq = jsonCOFINS.getJSONObject("COFINSAliq");
-                    
-                    int n = i + 1;
-                    
-                    Det det = new Det();
+                // Preenche os dados do Imposto.
+                Imposto imposto = new Imposto();
 
-                    // O numero do item.
-                    det.setNItem(Integer.toString(n));
+                ICMS icms = new ICMS();
 
-                    // Preenche os dados dos Produtos.
-                    Prod prod = new Prod();
-                    prod.setCProd(jsonProd.get("cProd").toString());
-                    prod.setCEAN(jsonProd.get("cEAN").toString());
-                    if (webserviceAmbiente.equals("2")) {
-                        prod.setXProd("NOTA FISCAL EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL");
-                    } else {
-                        prod.setXProd(jsonProd.get("xProd").toString());
-                    }
-                    prod.setNCM(jsonProd.get("NCM").toString());
-                    prod.setCEST(jsonProd.get("CEST").toString());
-                    prod.setIndEscala(jsonProd.get("indEscala").toString());
-                    prod.setCFOP(jsonProd.get("CFOP").toString());
-                    prod.setUCom(jsonProd.get("uCom").toString());
-                    prod.setQCom(jsonProd.get("qCom").toString());
-                    prod.setVUnCom(jsonProd.get("vUnCom").toString());
-                    prod.setVProd(jsonProd.get("vProd").toString());
-                    prod.setCEANTrib(jsonProd.get("cEANTrib").toString());
-                    prod.setUTrib(jsonProd.get("uTrib").toString());
-                    prod.setQTrib(jsonProd.get("qTrib").toString());
-                    prod.setVUnTrib(jsonProd.get("vUnTrib").toString());
-                    prod.setIndTot(jsonProd.get("indTot").toString());
-
-                    det.setProd(prod);
-
-                    // Preenche os dados do Imposto.
-                    Imposto imposto = new Imposto();
-
-                    ICMS icms = new ICMS();
-                    
-                    if (jsonICMS.has("ICMS00")) {
-                        ICMS.ICMS00 icms00 = new ICMS.ICMS00();
-                        icms00.setOrig(jsonICMS00.get("orig").toString());
-                        icms00.setCST(jsonICMS00.get("CST").toString());
-                        icms00.setModBC(jsonICMS00.get("modBC").toString());
-                        icms00.setVBC(jsonICMS00.get("vBC").toString());
-                        icms00.setPICMS(jsonICMS00.get("pICMS").toString());
-                        icms00.setVICMS(jsonICMS00.get("vICMS").toString());
-                        icms.setICMS00(icms00);
-                    }
-                    if (jsonICMS.has("ICMS10")) {
-                        ICMS.ICMS10 icms10 = new ICMS.ICMS10();
-                        icms10.setOrig(jsonICMS10.get("orig").toString());
-                        icms10.setCST(jsonICMS10.get("CST").toString());
-                        icms10.setModBC(jsonICMS10.get("modBC").toString());
-                        icms10.setVBC(jsonICMS10.get("vBC").toString());
-                        icms10.setPICMS(jsonICMS10.get("pICMS").toString());
-                        icms10.setVICMS(jsonICMS10.get("vICMS").toString());
-                        icms.setICMS10(icms10);
-                    }
-                    if (jsonICMS.has("ICMS20")) {
-                        ICMS.ICMS20 icms20 = new ICMS.ICMS20();
-                        icms20.setOrig(jsonICMS20.get("orig").toString());
-                        icms20.setCST(jsonICMS20.get("CST").toString());
-                        icms20.setModBC(jsonICMS20.get("modBC").toString());
-                        icms20.setVBC(jsonICMS20.get("vBC").toString());
-                        icms20.setPICMS(jsonICMS20.get("pICMS").toString());
-                        icms20.setVICMS(jsonICMS20.get("vICMS").toString());
-                        icms.setICMS20(icms20);
-                    }
-                    if (jsonICMS.has("ICMS30")) {
-                        ICMS.ICMS30 icms30 = new ICMS.ICMS30();
-                        icms30.setOrig(jsonICMS30.get("orig").toString());
-                        icms30.setCST(jsonICMS30.get("CST").toString());
-                        icms30.setModBCST(jsonICMS30.get("modBCST").toString());
-                        icms30.setPMVAST(jsonICMS30.get("pMVAST").toString());
-                        icms30.setPRedBCST(jsonICMS30.get("pRedBCST").toString());
-                        icms30.setVBCST(jsonICMS30.get("vBCST").toString());
-                        icms30.setPICMSST(jsonICMS30.get("pICMSST").toString());
-                        icms30.setVICMSST(jsonICMS30.get("vICMSST").toString());
-                        icms.setICMS30(icms30);
-                    }
-                    if (jsonICMS.has("ICMS40")) {
-                        ICMS.ICMS40 icms40 = new ICMS.ICMS40();
-                        icms40.setOrig(jsonICMS40.get("orig").toString());
-                        icms40.setCST(jsonICMS40.get("CST").toString());
-                        icms40.setVICMSDeson(jsonICMS40.get("vICMSDeson").toString());
-                        icms.setICMS40(icms40);
-                    }
-                    if (jsonICMS.has("ICMS51")) {
-                        ICMS.ICMS51 icms51 = new ICMS.ICMS51();
-                        icms51.setOrig(jsonICMS51.get("orig").toString());
-                        icms51.setCST(jsonICMS51.get("CST").toString());
-                        icms51.setModBC(jsonICMS51.get("modBC").toString());
-                        icms51.setVBC(jsonICMS51.get("vBC").toString());
-                        icms51.setPICMS(jsonICMS51.get("pICMS").toString());
-                        icms51.setVICMS(jsonICMS51.get("vICMS").toString());
-                        icms.setICMS51(icms51);
-                    }
-                    if (jsonICMS.has("ICMS60")) {
-                        ICMS.ICMS60 icms60 = new ICMS.ICMS60();
-                        icms60.setOrig(jsonICMS60.get("orig").toString());
-                        icms60.setCST(jsonICMS60.get("CST").toString());
-                        icms60.setVBCSTRet(jsonICMS60.get("vBCSTRet").toString());
-                        icms60.setPST(jsonICMS60.get("pST").toString());
-                        icms60.setVICMSSubstituto(jsonICMS60.get("vICMSSubstituto").toString());
-                        icms60.setVICMSSTRet(jsonICMS60.get("vICMSSTRet").toString());
-                        icms60.setVBCFCPSTRet(jsonICMS60.get("vBCFCPSTRet").toString());
-                        icms60.setPFCPSTRet(jsonICMS60.get("pFCPSTRet").toString());
-                        icms60.setPRedBCEfet(jsonICMS60.get("pRedBCEfet").toString());
-                        icms60.setVBCEfet(jsonICMS60.get("vBCEfet").toString());
-                        icms60.setPICMSEfet(jsonICMS60.get("pICMSEfet").toString());
-                        icms60.setVICMSEfet(jsonICMS60.get("vICMSEfet").toString());
-                        icms.setICMS60(icms60);
-                    }
-                    if (jsonICMS.has("ICMS70")) {
-                        ICMS.ICMS70 icms70 = new ICMS.ICMS70();
-                        icms70.setOrig(jsonICMS70.get("orig").toString());
-                        icms70.setCST(jsonICMS70.get("CST").toString());
-                        icms70.setModBC(jsonICMS70.get("modBC").toString());
-                        icms70.setVBC(jsonICMS70.get("vBC").toString());
-                        icms70.setPICMS(jsonICMS70.get("pICMS").toString());
-                        icms70.setVICMS(jsonICMS70.get("vICMS").toString());
-                        icms.setICMS70(icms70);
-                    }
-                    if (jsonICMS.has("ICMS90")) {
-                        ICMS.ICMS90 icms90 = new ICMS.ICMS90();
-                        icms90.setOrig(jsonICMS90.get("orig").toString());
-                        icms90.setCST(jsonICMS90.get("CST").toString());
-                        icms90.setModBC(jsonICMS90.get("modBC").toString());
-                        icms90.setVBC(jsonICMS90.get("vBC").toString());
-                        icms90.setPICMS(jsonICMS90.get("pICMS").toString());
-                        icms90.setVICMS(jsonICMS90.get("vICMS").toString());
-                        icms.setICMS90(icms90);
-                    }
-                    
-                    PIS pis = new PIS();
-                    PISAliq pisAliq = new PISAliq();
-                    pisAliq.setCST(jsonPISAliq.get("CST").toString());
-                    pisAliq.setVBC(jsonPISAliq.get("vBC").toString());
-                    pisAliq.setPPIS(jsonPISAliq.get("pPIS").toString());
-                    pisAliq.setVPIS(jsonPISAliq.get("vPIS").toString());
-                    pis.setPISAliq(pisAliq);
-
-                    COFINS cofins = new COFINS();
-                    COFINSAliq cofinsAliq = new COFINSAliq();
-                    cofinsAliq.setCST(jsonCOFINSAliq.get("CST").toString());
-                    cofinsAliq.setVBC(jsonCOFINSAliq.get("vBC").toString());
-                    cofinsAliq.setPCOFINS(jsonCOFINSAliq.get("pCOFINS").toString());
-                    cofinsAliq.setVCOFINS(jsonCOFINSAliq.get("vCOFINS").toString());
-                    cofins.setCOFINSAliq(cofinsAliq);
-
-                    JAXBElement<ICMS> icmsElement = new JAXBElement<ICMS>(new QName("ICMS"), ICMS.class, icms);
-                    imposto.getContent().add(icmsElement);
-
-                    JAXBElement<PIS> pisElement = new JAXBElement<PIS>(new QName("PIS"), PIS.class, pis);
-                    imposto.getContent().add(pisElement);
-
-                    JAXBElement<COFINS> cofinsElement = new JAXBElement<COFINS>(new QName("COFINS"), COFINS.class, cofins);
-                    imposto.getContent().add(cofinsElement);
-
-                    det.setImposto(imposto);
-
-                    infNFe.getDet().addAll(Collections.singletonList(det));
+                if (jsonICMS.has("ICMS00")) {
+                    ICMS.ICMS00 icms00 = new ICMS.ICMS00();
+                    icms00.setOrig(jsonICMS00.get("orig").toString());
+                    icms00.setCST(jsonICMS00.get("CST").toString());
+                    icms00.setModBC(jsonICMS00.get("modBC").toString());
+                    icms00.setVBC(jsonICMS00.get("vBC").toString());
+                    icms00.setPICMS(jsonICMS00.get("pICMS").toString());
+                    icms00.setVICMS(jsonICMS00.get("vICMS").toString());
+                    icms.setICMS00(icms00);
                 }
-                
-                // Preenche os totais da NFC-e.
-                Total total = new Total();
-                ICMSTot icmstot = new ICMSTot();
-                icmstot.setVBC(jsonICMSTot.get("vBC").toString());
-                icmstot.setVICMS(jsonICMSTot.get("vICMS").toString());
-                icmstot.setVICMSDeson(jsonICMSTot.get("vICMSDeson").toString());
-                icmstot.setVFCP(jsonICMSTot.get("vFCP").toString());
-                icmstot.setVFCPST(jsonICMSTot.get("vBCST").toString());
-                icmstot.setVFCPSTRet(jsonICMSTot.get("vST").toString());
-                icmstot.setVBCST(jsonICMSTot.get("vFCPST").toString());
-                icmstot.setVST(jsonICMSTot.get("vFCPSTRet").toString());
-                icmstot.setVProd(jsonICMSTot.get("vProd").toString());
-                icmstot.setVFrete(jsonICMSTot.get("vFrete").toString());
-                icmstot.setVSeg(jsonICMSTot.get("vSeg").toString());
-                icmstot.setVDesc(jsonICMSTot.get("vDesc").toString());
-                icmstot.setVII(jsonICMSTot.get("vII").toString());
-                icmstot.setVIPI(jsonICMSTot.get("vIPI").toString());
-                icmstot.setVIPIDevol(jsonICMSTot.get("vIPIDevol").toString());
-                icmstot.setVPIS(jsonICMSTot.get("vPIS").toString());
-                icmstot.setVCOFINS(jsonICMSTot.get("vCOFINS").toString());
-                icmstot.setVOutro(jsonICMSTot.get("vOutro").toString());
-                icmstot.setVNF(jsonICMSTot.get("vNF").toString());
-                total.setICMSTot(icmstot);
-
-                infNFe.setTotal(total);
-
-                // Preenche os dados do Transporte.
-                Transp transp = new Transp();
-                transp.setModFrete(jsonTransp.get("modFrete").toString());
-
-                infNFe.setTransp(transp);
-
-                // Preenche dados dos Pagamentos.
-                Pag pag = new Pag();
-                
-                for(int i = 0; i < jsonPag.length(); i++){
-                    JSONObject jsonDetPag = jsonPag.getJSONObject(i);
-                    Pag.DetPag detPag = new Pag.DetPag();
-                    if (jsonDetPag.has("indPag")) {
-                        detPag.setIndPag(jsonDetPag.get("indPag").toString());
-                    }
-                    detPag.setTPag(jsonDetPag.get("tPag").toString());
-                    detPag.setVPag(jsonDetPag.get("vPag").toString());
-                    if (jsonDetPag.has("card")) {
-                        JSONObject jsonCard = jsonDetPag.getJSONObject("card");
-                        
-                        Pag.DetPag.Card card = new Pag.DetPag.Card();
-                        card.setTpIntegra(jsonCard.get("tpIntegra").toString());
-                        card.setCNPJ(jsonCard.get("CNPJ").toString());
-                        card.setTBand(jsonCard.get("tBand").toString());
-                        card.setCAut(jsonCard.get("cAut").toString());
-                        detPag.setCard(card);
-                    }
-                    pag.getDetPag().add(detPag);
+                if (jsonICMS.has("ICMS10")) {
+                    ICMS.ICMS10 icms10 = new ICMS.ICMS10();
+                    icms10.setOrig(jsonICMS10.get("orig").toString());
+                    icms10.setCST(jsonICMS10.get("CST").toString());
+                    icms10.setModBC(jsonICMS10.get("modBC").toString());
+                    icms10.setVBC(jsonICMS10.get("vBC").toString());
+                    icms10.setPICMS(jsonICMS10.get("pICMS").toString());
+                    icms10.setVICMS(jsonICMS10.get("vICMS").toString());
+                    icms10.setVBCFCP(jsonICMS10.get("vBCFCP").toString());
+                    icms10.setPFCP(jsonICMS10.get("pFCP").toString());
+                    icms10.setVFCP(jsonICMS10.get("vFCP").toString());
+                    icms10.setModBCST(jsonICMS10.get("modBCST").toString());
+                    icms10.setPMVAST(jsonICMS10.get("pMVAST").toString());
+                    icms10.setPRedBCST(jsonICMS10.get("pRedBCST").toString());
+                    icms10.setVBCST(jsonICMS10.get("vBCST").toString());
+                    icms10.setPICMSST(jsonICMS10.get("pICMSST").toString());
+                    icms10.setVICMSST(jsonICMS10.get("vICMSST").toString());
+                    icms.setICMS10(icms10);
                 }
-                
-                infNFe.setPag(pag);
-                
-                InfAdic infAdic = new InfAdic();
-                infAdic.setInfCpl(jsonInfAdic.get("infCpl").toString());
-                infNFe.setInfAdic(infAdic);
-                        
-                TNFe nfe = new TNFe();
-                nfe.setInfNFe(infNFe);
+                if (jsonICMS.has("ICMS20")) {
+                    ICMS.ICMS20 icms20 = new ICMS.ICMS20();
+                    icms20.setOrig(jsonICMS20.get("orig").toString());
+                    icms20.setCST(jsonICMS20.get("CST").toString());
+                    icms20.setModBC(jsonICMS20.get("modBC").toString());
+                    icms20.setVBC(jsonICMS20.get("vBC").toString());
+                    icms20.setPICMS(jsonICMS20.get("pICMS").toString());
+                    icms20.setVICMS(jsonICMS20.get("vICMS").toString());
+                    icms20.setVBCFCP(jsonICMS20.get("vBCFCP").toString());
+                    icms20.setPFCP(jsonICMS20.get("pFCP").toString());
+                    icms20.setVFCP(jsonICMS20.get("vFCP").toString());
+                    icms20.setVICMSDeson(jsonICMS20.get("vICMSDeson").toString());
+                    icms20.setMotDesICMS(jsonICMS20.get("motDesICMS").toString());
+                    iicms.setICMS20(icms20);
+                }
+                if (jsonICMS.has("ICMS30")) {
+                    ICMS.ICMS30 icms30 = new ICMS.ICMS30();
+                    icms30.setOrig(jsonICMS30.get("orig").toString());
+                    icms30.setCST(jsonICMS30.get("CST").toString());
+                    icms30.setModBCST(jsonICMS30.get("modBCST").toString());
+                    icms30.setPMVAST(jsonICMS30.get("pMVAST").toString());
+                    icms30.setPRedBCST(jsonICMS30.get("pRedBCST").toString());
+                    icms30.setVBCST(jsonICMS30.get("vBCST").toString());
+                    icms30.setPICMSST(jsonICMS30.get("pICMSST").toString());
+                    icms30.setVICMSST(jsonICMS30.get("vICMSST").toString());
+                    icms30.setVBCFCPST(jsonICMS30.get("vBCFCPST").toString());
+                    icms30.setPFCPST(jsonICMS30.get("pFCPST").toString());
+                    icms30.setVFCPST(jsonICMS30.get("vFCPST").toString());
+                    icms30.setVICMSDeson(jsonICMS30.get("vICMSDeson").toString());
+                    icms30.setMotDesICMS(jsonICMS30.get("motDesICMS").toString());
+                    icms.setICMS30(icms30);
+                }
+                if (jsonICMS.has("ICMS40")) {
+                    ICMS.ICMS40 icms40 = new ICMS.ICMS40();
+                    icms40.setOrig(jsonICMS40.get("orig").toString());
+                    icms40.setCST(jsonICMS40.get("CST").toString());
+                    icms40.setVICMSDeson(jsonICMS40.get("vICMSDeson").toString());
+                    icms40.setMotDesICMS(jsonICMS40.get("motDesICMS").toString());
+                    icms.setICMS40(icms40);
+                }
+                if (jsonICMS.has("ICMS51")) {
+                    ICMS.ICMS51 icms51 = new ICMS.ICMS51();
+                    icms51.setOrig(jsonICMS51.get("orig").toString());
+                    icms51.setCST(jsonICMS51.get("CST").toString());
+                    icms51.setModBC(jsonICMS51.get("modBC").toString());
+                    icms51.setVBC(jsonICMS51.get("vBC").toString());
+                    icms51.setPICMS(jsonICMS51.get("pICMS").toString());
+                    icms51.setVICMS(jsonICMS51.get("vICMS").toString());
+                    icms51.setVBCFCP(jsonICMS51.get("vBCFCP").toString());
+                    icms51.setPFCP(jsonICMS51.get("pFCP").toString());
+                    icms51.setVFCP(jsonICMS51.get("vFCP").toString());
+                    icms.setICMS51(icms51);
+                }
+                if (jsonICMS.has("ICMS60")) {
+                    ICMS.ICMS60 icms60 = new ICMS.ICMS60();
+                    icms60.setOrig(jsonICMS60.get("orig").toString());
+                    icms60.setCST(jsonICMS60.get("CST").toString());
+                    icms60.setVBCSTRet(jsonICMS60.get("vBCSTRet").toString());
+                    icms60.setPST(jsonICMS60.get("pST").toString());
+                    icms60.setVICMSSubstituto(jsonICMS60.get("vICMSSubstituto").toString());
+                    icms60.setVICMSSTRet(jsonICMS60.get("vICMSSTRet").toString());
+                    icms60.setVBCFCPSTRet(jsonICMS60.get("vBCFCPSTRet").toString());
+                    icms60.setPFCPSTRet(jsonICMS60.get("pFCPSTRet").toString());
+                    icms60.setPRedBCEfet(jsonICMS60.get("pRedBCEfet").toString());
+                    icms60.setVBCEfet(jsonICMS60.get("vBCEfet").toString());
+                    icms60.setPICMSEfet(jsonICMS60.get("pICMSEfet").toString());
+                    icms60.setVICMSEfet(jsonICMS60.get("vICMSEfet").toString());
+                    icms.setICMS60(icms60);
+                }
+                if (jsonICMS.has("ICMS70")) {
+                    ICMS.ICMS70 icms70 = new ICMS.ICMS70();
+                    icms70.setOrig(jsonICMS70.get("orig").toString());
+                    icms70.setCST(jsonICMS70.get("CST").toString());
+                    icms70.setModBC(jsonICMS70.get("modBC").toString());
+                    icms70.setVBC(jsonICMS70.get("vBC").toString());
+                    icms70.setPICMS(jsonICMS70.get("pICMS").toString());
+                    icms70.setVICMS(jsonICMS70.get("vICMS").toString());
+                    icms70.setVBCFCP(jsonICMS70.get("vBCFCP").toString());
+                    icms70.setPFCP(jsonICMS70.get("pFCP").toString());
+                    icms70.setVFCP(jsonICMS70.get("vFCP").toString());
+                    icms70.setModBCST(jsonICMS70.get("modBCST").toString());
+                    icms70.setPMVAST(jsonICMS70.get("pMVAST").toString());
+                    icms70.setPRedBCST(jsonICMS70.get("pRedBCST").toString());
+                    icms70.setVBCST(jsonICMS70.get("vBCST").toString());
+                    icms70.setPICMSST(jsonICMS70.get("pICMSST").toString());
+                    icms70.setVICMSST(jsonICMS70.get("vICMSST").toString());
+                    icms70.setVBCFCPST(jsonICMS70.get("vBCFCPST").toString());
+                    icms70.setPFCPST(jsonICMS70.get("pFCPST").toString());
+                    icms70.setVFCPST(jsonICMS70.get("vFCPST").toString());
+                    icms70.setVICMSDeson(jsonICMS70.get("vICMSDeson").toString());
+                    icms70.setMotDesICMS(jsonICMS70.get("motDesICMS").toString());
+                    icms.setICMS70(icms70);
+                }
+                if (jsonICMS.has("ICMS90")) {
+                    ICMS.ICMS90 icms90 = new ICMS.ICMS90();
+                    icms90.setOrig(jsonICMS90.get("orig").toString());
+                    icms90.setCST(jsonICMS90.get("CST").toString());
+                    icms90.setModBC(jsonICMS90.get("modBC").toString());
+                    icms90.setVBC(jsonICMS90.get("vBC").toString());
+                    icms90.setPICMS(jsonICMS90.get("pICMS").toString());
+                    icms90.setVICMS(jsonICMS90.get("vICMS").toString());
+                    icms90.setVBCFCP(jsonICMS90.get("vBCFCP").toString());
+                    icms90.setPFCP(jsonICMS90.get("pFCP").toString());
+                    icms90.setVFCP(jsonICMS90.get("vFCP").toString());
+                    icms90.setModBCST(jsonICMS90.get("modBCST").toString());
+                    icms90.setPMVAST(jsonICMS90.get("pMVAST").toString());
+                    icms90.setPRedBCST(jsonICMS90.get("pRedBCST").toString());
+                    icms90.setVBCST(jsonICMS90.get("vBCST").toString());
+                    icms90.setPICMSST(jsonICMS90.get("pICMSST").toString());
+                    icms90.setVICMSST(jsonICMS90.get("vICMSST").toString());
+                    icms90.setVBCFCPST(jsonICMS90.get("vBCFCPST").toString());
+                    icms90.setPFCPST(jsonICMS90.get("pFCPST").toString());
+                    icms90.setVFCPST(jsonICMS90.get("vFCPST").toString());
+                    icms90.setVICMSDeson(jsonICMS90.get("vICMSDeson").toString());
+                    icms90.setMotDesICMS(jsonICMS90.get("motDesICMS").toString());
+                    icms.setICMS90(icms90);
+                }
 
-                // Monta a EnviNfe.
-                TEnviNFe enviNFe = new TEnviNFe();
-                enviNFe.setVersao(ConstantesUtil.VERSAO.NFE);
-                enviNFe.setIdLote("1");
-                enviNFe.setIndSinc("1");
-                enviNFe.getNFe().add(nfe);
+                PIS pis = new PIS();
+                PISAliq pisAliq = new PISAliq();
+                pisAliq.setCST(jsonPISAliq.get("CST").toString());
+                pisAliq.setVBC(jsonPISAliq.get("vBC").toString());
+                pisAliq.setPPIS(jsonPISAliq.get("pPIS").toString());
+                pisAliq.setVPIS(jsonPISAliq.get("vPIS").toString());
+                pis.setPISAliq(pisAliq);
 
+                COFINS cofins = new COFINS();
+                COFINSAliq cofinsAliq = new COFINSAliq();
+                cofinsAliq.setCST(jsonCOFINSAliq.get("CST").toString());
+                cofinsAliq.setVBC(jsonCOFINSAliq.get("vBC").toString());
+                cofinsAliq.setPCOFINS(jsonCOFINSAliq.get("pCOFINS").toString());
+                cofinsAliq.setVCOFINS(jsonCOFINSAliq.get("vCOFINS").toString());
+                cofins.setCOFINSAliq(cofinsAliq);
+
+                JAXBElement<ICMS> icmsElement = new JAXBElement<ICMS>(new QName("ICMS"), ICMS.class, icms);
+                imposto.getContent().add(icmsElement);
+
+                JAXBElement<PIS> pisElement = new JAXBElement<PIS>(new QName("PIS"), PIS.class, pis);
+                imposto.getContent().add(pisElement);
+
+                JAXBElement<COFINS> cofinsElement = new JAXBElement<COFINS>(new QName("COFINS"), COFINS.class, cofins);
+                imposto.getContent().add(cofinsElement);
+
+                det.setImposto(imposto);
+
+                infNFe.getDet().addAll(Collections.singletonList(det));
+            }
+
+            // Preenche os totais da NFC-e.
+            Total total = new Total();
+            ICMSTot icmstot = new ICMSTot();
+            icmstot.setVBC(jsonICMSTot.get("vBC").toString());
+            icmstot.setVICMS(jsonICMSTot.get("vICMS").toString());
+            icmstot.setVICMSDeson(jsonICMSTot.get("vICMSDeson").toString());
+            icmstot.setVFCP(jsonICMSTot.get("vFCP").toString());
+            icmstot.setVFCPST(jsonICMSTot.get("vBCST").toString());
+            icmstot.setVFCPSTRet(jsonICMSTot.get("vST").toString());
+            icmstot.setVBCST(jsonICMSTot.get("vFCPST").toString());
+            icmstot.setVST(jsonICMSTot.get("vFCPSTRet").toString());
+            icmstot.setVProd(jsonICMSTot.get("vProd").toString());
+            icmstot.setVFrete(jsonICMSTot.get("vFrete").toString());
+            icmstot.setVSeg(jsonICMSTot.get("vSeg").toString());
+            icmstot.setVDesc(jsonICMSTot.get("vDesc").toString());
+            icmstot.setVII(jsonICMSTot.get("vII").toString());
+            icmstot.setVIPI(jsonICMSTot.get("vIPI").toString());
+            icmstot.setVIPIDevol(jsonICMSTot.get("vIPIDevol").toString());
+            icmstot.setVPIS(jsonICMSTot.get("vPIS").toString());
+            icmstot.setVCOFINS(jsonICMSTot.get("vCOFINS").toString());
+            icmstot.setVOutro(jsonICMSTot.get("vOutro").toString());
+            icmstot.setVNF(jsonICMSTot.get("vNF").toString());
+            total.setICMSTot(icmstot);
+
+            infNFe.setTotal(total);
+
+            // Preenche os dados do Transporte.
+            Transp transp = new Transp();
+            transp.setModFrete(jsonTransp.get("modFrete").toString());
+
+            infNFe.setTransp(transp);
+
+            // Preenche dados dos Pagamentos.
+            Pag pag = new Pag();
+
+            for(int i = 0; i < jsonPag.length(); i++){
+                JSONObject jsonDetPag = jsonPag.getJSONObject(i);
+                Pag.DetPag detPag = new Pag.DetPag();
+                if (jsonDetPag.has("indPag")) {
+                    detPag.setIndPag(jsonDetPag.get("indPag").toString());
+                }
+                detPag.setTPag(jsonDetPag.get("tPag").toString());
+                detPag.setVPag(jsonDetPag.get("vPag").toString());
+                if (jsonDetPag.has("card")) {
+                    JSONObject jsonCard = jsonDetPag.getJSONObject("card");
+
+                    Pag.DetPag.Card card = new Pag.DetPag.Card();
+                    card.setTpIntegra(jsonCard.get("tpIntegra").toString());
+                    card.setCNPJ(jsonCard.get("CNPJ").toString());
+                    card.setTBand(jsonCard.get("tBand").toString());
+                    card.setCAut(jsonCard.get("cAut").toString());
+                    detPag.setCard(card);
+                }
+                pag.getDetPag().add(detPag);
+            }
+
+            infNFe.setPag(pag);
+
+            InfAdic infAdic = new InfAdic();
+            infAdic.setInfCpl(jsonInfAdic.get("infCpl").toString());
+            infNFe.setInfAdic(infAdic);
+
+            TNFe nfe = new TNFe();
+            nfe.setInfNFe(infNFe);
+
+            // Monta a EnviNfe.
+            TEnviNFe enviNFe = new TEnviNFe();
+            enviNFe.setVersao(ConstantesUtil.VERSAO.NFE);
+            enviNFe.setIdLote("1");
+            enviNFe.setIndSinc("1");
+            enviNFe.getNFe().add(nfe);
+            
+            try {
                 // Monta e Assina o XML.
                 enviNFe = Nfe.montaNfe(config, enviNFe, true);
 
@@ -633,6 +714,22 @@ public class NFCeMonitor {
                         protocolo = retornoNfe.getProtNFe().get(0).getInfProt().getNProt();
                         xml = XmlNfeUtil.criaNfeProc(enviNFe, retornoNfe.getProtNFe().get(0));
                         
+                        // Salva o XML da NFC-e.
+                        FileWriter writer = new FileWriter(caminhoXML + "/NFe" + chave + ".xml");
+                        writer.write(xml);
+                        writer.close();      
+                       
+                        // Utiliza layout de impressão padrão.
+                        Impressao impressao = ImpressaoUtil.impressaoPadraoNFCe(xml, webserviceConsulta);
+
+                        // Faz a impressão do DANFE em formato PDF.
+                        ImpressaoService.impressaoPdfArquivo(impressao, caminhoXML + "/NFe" + chave + ".pdf");
+                        
+                        if (retornarDANFE.equals("1")) {
+                            byte[] bytes = Files.readAllBytes(Paths.get(caminhoXML + "/NFe" + chave + ".pdf"));
+                            byte[] encoded = java.util.Base64.getEncoder().encode(bytes);
+                            danfePDF = new String(encoded);
+                        }
                         System.out.println("Protocolo: " + protocolo);
                         System.out.println("XML Final: " + xml);
                     }
@@ -656,18 +753,24 @@ public class NFCeMonitor {
                         // Utiliza layout de impressão padrão.
                         Impressao impressao = ImpressaoUtil.impressaoPadraoNFCe(xml, webserviceConsulta);
 
-                        //Faz a impressão em pdf File passando o caminho do Arquivo
+                        // Faz a impressão do DANFE em formato PDF.
                         ImpressaoService.impressaoPdfArquivo(impressao, caminhoXML + "/NFe" + chave + ".pdf");
-
+                        
+                        if (retornarDANFE.equals("1")) {
+                            byte[] bytes = Files.readAllBytes(Paths.get(caminhoXML + "/NFe" + chave + ".pdf"));
+                            byte[] encoded = java.util.Base64.getEncoder().encode(bytes);
+                            danfePDF = new String(encoded);
+                        }
+                        
                         System.out.println("Protocolo: " + protocolo);
                         System.out.println("XML Final: " + xml);
                     }
                 }
             } catch (Exception e) {
+                System.out.println(e.getMessage());
+                
                 status = "000";
                 motivo = e.getMessage();
-                
-                System.err.println("Erro: " + e.getMessage());
             }
             
             JSONObject responseJSON = new JSONObject();
@@ -675,6 +778,7 @@ public class NFCeMonitor {
             responseJSON.put("motivo", motivo);
             responseJSON.put("protocolo", protocolo);
             responseJSON.put("xml", xml);
+            responseJSON.put("danfePDF", danfePDF);
             
             System.out.println(responseJSON.toString());
             

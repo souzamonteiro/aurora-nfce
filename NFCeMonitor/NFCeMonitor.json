@@ -9,5 +9,6 @@
     "caminhoSchemas": "/home/roberto/schemas/nfe/",
     "caminhoCertificado": "/home/roberto/certificados/33630582000149.pfx",
     "senhaCertificado": "1234",
-    "caminhoXML": "/home/roberto/xml"
+    "caminhoXML": "/home/roberto/xml",
+    "retornarDANFE": "0"
 }
