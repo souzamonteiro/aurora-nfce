@@ -1,3 +1,8 @@
-com/souzamonteiro/nfcemonitor/NFCeMonitor$EnviarHandler.class
+com/souzamonteiro/nfcemonitor/NFCeMonitor$NFeCancelamentoHandler.class
+com/souzamonteiro/nfcemonitor/NFCeMonitor$NFeAutorizacaoHandler.class
+com/souzamonteiro/nfcemonitor/NFCeMonitor$NFeConsultaHandler.class
 com/souzamonteiro/nfcemonitor/NFCeMonitor.class
+com/souzamonteiro/nfcemonitor/NFCeMonitor$NFeInutilizacaoHandler.class
+com/souzamonteiro/nfcemonitor/NFCeMonitor$NFeStatusServicoHandler.class
 com/souzamonteiro/nfcemonitor/Config.class
+com/souzamonteiro/nfcemonitor/NFCeMonitor$NFeCartaCorrecaoHandler.class
