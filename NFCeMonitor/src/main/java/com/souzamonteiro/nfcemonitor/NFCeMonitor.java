@@ -550,7 +550,7 @@ public class NFCeMonitor {
                         icms10.setPICMSST(jsonICMS10.get("pICMSST").toString());
                         icms10.setVICMSST(jsonICMS10.get("vICMSST").toString());
                     }
-                    if (jsonICMS00.has("vBCFCP")) {
+                    if (jsonICMS00.has("vBCFCPST")) {
                         icms10.setVBCFCPST(jsonICMS10.get("vBCFCPST").toString());
                         icms10.setPFCPST(jsonICMS10.get("pFCPST").toString());
                         icms10.setVFCPST(jsonICMS10.get("vFCPST").toString());
