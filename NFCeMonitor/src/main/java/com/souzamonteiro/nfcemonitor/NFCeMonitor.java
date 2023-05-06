@@ -1056,10 +1056,29 @@ public class NFCeMonitor {
                 }
                 
                 if (simularContingencia.equals("1")) {
-                    cStat = "000";
-                    xMotivo = "Time out";
+                    dhRecbto = "";
                     nProt = "";
+                    tpEmis = "";
+                    dhCont = "";
+                    xJust = "";
+                    chave = "";
+                    urlChave = "";
+                    qrCode = "";
+                    xml = "";
                     
+                    throw new Exception("Connection reset");
+                }
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+                
+                cStat = "000";
+                xMotivo = e.getMessage();
+                if (xMotivo.indexOf("Rejeicao") > -1) {
+                    cStat = xMotivo.substring(0, 3);
+                }
+                
+                // Se o erro não ocorreu por rejeição, cria o XML da NF-e em contingência.
+                if (cStat.equals("000")) {
                     // Tipo da emissão contingência: tpEmis = "9".
                     tpEmis = "9";
                     chaveUtil = new ChaveUtil(config.getEstado(), cnpj, modelo, serie, numeroNFCe, tpEmis, cnf, dataEmissao);
@@ -1079,7 +1098,7 @@ public class NFCeMonitor {
 
                         urlChave = WebServiceUtil.getUrl(config, DocumentoEnum.NFCE, ServicosEnum.URL_CONSULTANFCE);  
                         qrCode = preencheQRCodeContingencia(enviNFeContingencia, config, idToken, csc);
-                        infNFeSupl = new TNFe.InfNFeSupl();
+                        TNFe.InfNFeSupl infNFeSupl = new TNFe.InfNFeSupl();
                         infNFeSupl.setQrCode(qrCode);
                         infNFeSupl.setUrlChave(urlChave);
                         enviNFeContingencia.getNFe().get(0).setInfNFeSupl(infNFeSupl);
@@ -1098,53 +1117,16 @@ public class NFCeMonitor {
                         cStat = "000";
                         xMotivo = error.getMessage();
                     }
-                }
-            } catch (Exception e) {
-                System.out.println(e.getMessage());
-                
-                cStat = "000";
-                xMotivo = e.getMessage();
-                if (xMotivo.indexOf("Rejeicao") > 0) {
-                    cStat = xMotivo.substring(0, 3);
-                }
-                
-                // Tipo da emissão contingência: tpEmis = "9".
-                tpEmis = "9";
-                chaveUtil = new ChaveUtil(config.getEstado(), cnpj, modelo, serie, numeroNFCe, tpEmis, cnf, dataEmissao);
-                chave = chaveUtil.getChaveNF();
-                cdv = chaveUtil.getDigitoVerificador();
-                enviNFeContingencia.getNFe().get(0).getInfNFe().setId(chave);
-                enviNFeContingencia.getNFe().get(0).getInfNFe().getIde().setTpEmis(tpEmis);
-                enviNFeContingencia.getNFe().get(0).getInfNFe().getIde().setCDV(cdv);
-                
-                dhCont = XmlNfeUtil.dataNfe(dataEmissao);
-                xJust = "Erro ao tentar enviar o XML da NF-e para a SEFAZ";
-                enviNFeContingencia.getNFe().get(0).getInfNFe().getIde().setDhCont(dhCont);
-                enviNFeContingencia.getNFe().get(0).getInfNFe().getIde().setXJust(xJust);
-                
-                try {
-                    enviNFeContingencia = Nfe.montaNfe(config, enviNFeContingencia, true);
-
-                    urlChave = WebServiceUtil.getUrl(config, DocumentoEnum.NFCE, ServicosEnum.URL_CONSULTANFCE);  
-                    qrCode = preencheQRCodeContingencia(enviNFeContingencia, config, idToken, csc);
-                    TNFe.InfNFeSupl infNFeSupl = new TNFe.InfNFeSupl();
-                    infNFeSupl.setQrCode(qrCode);
-                    infNFeSupl.setUrlChave(urlChave);
-                    enviNFeContingencia.getNFe().get(0).setInfNFeSupl(infNFeSupl);
-                    
-                    xml = XmlNfeUtil.objectToXml(enviNFeContingencia.getNFe().get(0), config.getEncode());
-                    
-                    System.out.println("XML Final: " + xml);
-                    
-                    // Salva o XML da NFC-e.
-                    FileWriter writer = new FileWriter(caminhoXML + "/NFe" + chave + ".xml");
-                    writer.write(xml);
-                    writer.close();
-                } catch (Exception error) {
-                    System.out.println(error.getMessage());
-                    
-                    cStat = "000";
-                    xMotivo = error.getMessage();
+                } else {
+                    dhRecbto = "";
+                    nProt = "";
+                    tpEmis = "";
+                    dhCont = "";
+                    xJust = "";
+                    chave = "";
+                    urlChave = "";
+                    qrCode = "";
+                    xml = "";
                 }
             }
             
@@ -1156,7 +1138,9 @@ public class NFCeMonitor {
             responseJSON.put("tpEmis", tpEmis);
             responseJSON.put("dhCont", dhCont);
             responseJSON.put("xJust", xJust);
-            responseJSON.put("chave", chave.substring(3));
+            if (chave.length() > 0) {
+                responseJSON.put("chave", chave.substring(3));
+            }
             responseJSON.put("urlChave", urlChave);
             responseJSON.put("qrCode", qrCode);
             responseJSON.put("xml", xml);
