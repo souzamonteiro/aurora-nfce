@@ -462,15 +462,23 @@ public class NFCeMonitor {
 
                 // Preenche os dados dos Produtos.
                 Prod prod = new Prod();
-                prod.setCProd(jsonProd.get("cProd").toString());
-                prod.setCEAN(jsonProd.get("cEAN").toString());
+                if (jsonProd.has("cProd")) {
+                    prod.setCProd(jsonProd.get("cProd").toString());
+                }
+                if (jsonProd.has("cEAN")) {
+                    prod.setCEAN(jsonProd.get("cEAN").toString());
+                }
                 if (webserviceAmbiente.equals("2")) {
                     prod.setXProd("NOTA FISCAL EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL");
                 } else {
                     prod.setXProd(jsonProd.get("xProd").toString());
                 }
-                prod.setNCM(jsonProd.get("NCM").toString());
-                prod.setCEST(jsonProd.get("CEST").toString());
+                if (jsonProd.has("NCM")) {
+                    prod.setNCM(jsonProd.get("NCM").toString());
+                }
+                if (jsonProd.has("CEST")) {
+                    prod.setCEST(jsonProd.get("CEST").toString());
+                }
                 if (jsonProd.has("indEscala")) {
                     prod.setIndEscala(jsonProd.get("indEscala").toString());
                 }
@@ -483,15 +491,33 @@ public class NFCeMonitor {
                 if (jsonProd.has("EXTIPI")) {
                     prod.setEXTIPI(jsonProd.get("EXTIPI").toString());
                 }
-                prod.setCFOP(jsonProd.get("CFOP").toString());
-                prod.setUCom(jsonProd.get("uCom").toString());
-                prod.setQCom(jsonProd.get("qCom").toString());
-                prod.setVUnCom(jsonProd.get("vUnCom").toString());
-                prod.setVProd(jsonProd.get("vProd").toString());
-                prod.setCEANTrib(jsonProd.get("cEANTrib").toString());
-                prod.setUTrib(jsonProd.get("uTrib").toString());
-                prod.setQTrib(jsonProd.get("qTrib").toString());
-                prod.setVUnTrib(jsonProd.get("vUnTrib").toString());
+                if (jsonProd.has("CFOP")) {
+                    prod.setCFOP(jsonProd.get("CFOP").toString());
+                }
+                if (jsonProd.has("uCom")) {
+                    prod.setUCom(jsonProd.get("uCom").toString());
+                }
+                if (jsonProd.has("qCom")) {
+                    prod.setQCom(jsonProd.get("qCom").toString());
+                }
+                if (jsonProd.has("vUnCom")) {
+                    prod.setVUnCom(jsonProd.get("vUnCom").toString());
+                }
+                if (jsonProd.has("vProd")) {
+                    prod.setVProd(jsonProd.get("vProd").toString());
+                }
+                if (jsonProd.has("cEANTrib")) {
+                    prod.setCEANTrib(jsonProd.get("cEANTrib").toString());
+                }
+                if (jsonProd.has("uTrib")) {
+                    prod.setUTrib(jsonProd.get("uTrib").toString());
+                }
+                if (jsonProd.has("qTrib")) {
+                    prod.setQTrib(jsonProd.get("qTrib").toString());
+                }
+                if (jsonProd.has("vUnTrib")) {
+                    prod.setVUnTrib(jsonProd.get("vUnTrib").toString());
+                }
                 if (jsonProd.has("vFrete")) {
                     prod.setVFrete(jsonProd.get("vFrete").toString());
                 }
@@ -504,8 +530,9 @@ public class NFCeMonitor {
                 if (jsonProd.has("vOutro")) {
                     prod.setVOutro(jsonProd.get("vOutro").toString());
                 }
-                prod.setIndTot(jsonProd.get("indTot").toString());
-
+                if (jsonProd.has("indTot")) {
+                    prod.setIndTot(jsonProd.get("indTot").toString());
+                }
                 det.setProd(prod);
 
                 // Preenche os dados do Imposto.
@@ -990,7 +1017,22 @@ public class NFCeMonitor {
                 infNFeSupl.setQrCode(qrCode);
                 infNFeSupl.setUrlChave(urlChave);
                 enviNFe.getNFe().get(0).setInfNFeSupl(infNFeSupl);
-
+                
+                // Simula contingência sem autorização da NFC-e.
+                if (simularContingencia.equals("1")) {
+                    dhRecbto = "";
+                    nProt = "";
+                    tpEmis = "";
+                    dhCont = "";
+                    xJust = "";
+                    chave = "";
+                    urlChave = "";
+                    qrCode = "";
+                    xml = "";
+                    
+                    throw new Exception("Connection reset");
+                }
+                
                 // Envia a NFC-e para a SEFAZ.
                 TRetEnviNFe retorno = Nfe.enviarNfe(config, enviNFe, DocumentoEnum.NFCE);
                 
@@ -1055,7 +1097,8 @@ public class NFCeMonitor {
                     }
                 }
                 
-                if (simularContingencia.equals("1")) {
+                // Simula contingência com autorização da NFC-e.
+                if (simularContingencia.equals("2")) {
                     dhRecbto = "";
                     nProt = "";
                     tpEmis = "";
