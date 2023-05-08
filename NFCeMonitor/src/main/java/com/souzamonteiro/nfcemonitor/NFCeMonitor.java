@@ -593,6 +593,7 @@ public class NFCeMonitor {
                     icms20.setOrig(jsonICMS20.get("orig").toString());
                     icms20.setCST(jsonICMS20.get("CST").toString());
                     icms20.setModBC(jsonICMS20.get("modBC").toString());
+                    icms20.setPRedBC(jsonICMS20.get("pRedBC").toString());
                     icms20.setVBC(jsonICMS20.get("vBC").toString());
                     icms20.setPICMS(jsonICMS20.get("pICMS").toString());
                     icms20.setVICMS(jsonICMS20.get("vICMS").toString());
@@ -649,6 +650,9 @@ public class NFCeMonitor {
                     if (jsonICMS51.has("modBC")) {
                         icms51.setModBC(jsonICMS51.get("modBC").toString());
                     }
+                    if (jsonICMS51.has("pRedBC")) {
+                        icms51.setPRedBC(jsonICMS51.get("pRedBC").toString());
+                    }
                     if (jsonICMS51.has("vBC")) {
                         icms51.setVBC(jsonICMS51.get("vBC").toString());
                     }
@@ -695,6 +699,7 @@ public class NFCeMonitor {
                     icms70.setOrig(jsonICMS70.get("orig").toString());
                     icms70.setCST(jsonICMS70.get("CST").toString());
                     icms70.setModBC(jsonICMS70.get("modBC").toString());
+                    icms70.setPRedBC(jsonICMS70.get("pRedBC").toString());
                     icms70.setVBC(jsonICMS70.get("vBC").toString());
                     icms70.setPICMS(jsonICMS70.get("pICMS").toString());
                     icms70.setVICMS(jsonICMS70.get("vICMS").toString());
