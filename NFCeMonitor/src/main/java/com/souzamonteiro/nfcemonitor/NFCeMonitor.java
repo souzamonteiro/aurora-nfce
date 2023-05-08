@@ -212,6 +212,8 @@ public class NFCeMonitor {
                 System.out.println(responseJSON.toString());
 
                 String response = responseJSON.toString();
+                
+                httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
                 httpExchange.sendResponseHeaders(200, 0);
                 OutputStream outputStream = httpExchange.getResponseBody();
                 outputStream.write(response.getBytes());
@@ -330,48 +332,50 @@ public class NFCeMonitor {
 
             // Preenche o Destinatario.
             Dest dest = new Dest();
-            if (jsonDest.has("CNPJ")) {
-                dest.setCNPJ(jsonDest.get("CNPJ").toString());
-            }
-            if (jsonDest.has("CPF")) {
-                dest.setCPF(jsonDest.get("CPF").toString());
-            }
-            if (webserviceAmbiente.equals("2")) {
-                dest.setXNome("NF-E EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL");
-            } else {
-                dest.setXNome(jsonDest.get("xNome").toString());
-            }
-            if (jsonDest.has("enderDest")) {
-                JSONObject jsonEnderDest = jsonDest.getJSONObject("enderDest");
-                
-                TEndereco enderDest = new TEndereco();
-                enderDest.setXLgr(jsonEnderDest.get("xLgr").toString());
-                enderDest.setNro(jsonEnderDest.get("nro").toString());
-                if (jsonEnderDest.has("xCpl")) {
-                    enderDest.setXCpl(jsonEnderDest.get("xCpl").toString());
+            if (jsonDest.has("CNPJ") || jsonDest.has("CPF")) {
+                if (jsonDest.has("CNPJ")) {
+                    dest.setCNPJ(jsonDest.get("CNPJ").toString());
                 }
-                enderDest.setXBairro(jsonEnderDest.get("xBairro").toString());
-                enderDest.setCMun(jsonEnderDest.get("cMun").toString());
-                enderDest.setXMun(jsonEnderDest.get("xMun").toString());
-                enderDest.setUF(TUf.valueOf(jsonEnderDest.get("UF").toString()));
-                if (jsonEnderDest.has("CEP")) {
-                    enderDest.setCEP(jsonEnderDest.get("CEP").toString());
+                if (jsonDest.has("CPF")) {
+                    dest.setCPF(jsonDest.get("CPF").toString());
                 }
-                if (jsonEnderDest.has("cPais")) {
-                    enderDest.setCPais(jsonEnderDest.get("cPais").toString());
+                if (webserviceAmbiente.equals("2")) {
+                    dest.setXNome("NF-E EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL");
+                } else {
+                    dest.setXNome(jsonDest.get("xNome").toString());
                 }
-                if (jsonEnderDest.has("xPais")) {
-                    enderDest.setXPais(jsonEnderDest.get("xPais").toString());
-                }
-                if (jsonEnderDest.has("fone")) {
-                    enderDest.setFone(jsonEnderDest.get("fone").toString());
-                }
-                dest.setEnderDest(enderDest);
-            }
-            dest.setIndIEDest("9");
-            
-            infNFe.setDest(dest);
+                if (jsonDest.has("enderDest")) {
+                    JSONObject jsonEnderDest = jsonDest.getJSONObject("enderDest");
 
+                    TEndereco enderDest = new TEndereco();
+                    enderDest.setXLgr(jsonEnderDest.get("xLgr").toString());
+                    enderDest.setNro(jsonEnderDest.get("nro").toString());
+                    if (jsonEnderDest.has("xCpl")) {
+                        enderDest.setXCpl(jsonEnderDest.get("xCpl").toString());
+                    }
+                    enderDest.setXBairro(jsonEnderDest.get("xBairro").toString());
+                    enderDest.setCMun(jsonEnderDest.get("cMun").toString());
+                    enderDest.setXMun(jsonEnderDest.get("xMun").toString());
+                    enderDest.setUF(TUf.valueOf(jsonEnderDest.get("UF").toString()));
+                    if (jsonEnderDest.has("CEP")) {
+                        enderDest.setCEP(jsonEnderDest.get("CEP").toString());
+                    }
+                    if (jsonEnderDest.has("cPais")) {
+                        enderDest.setCPais(jsonEnderDest.get("cPais").toString());
+                    }
+                    if (jsonEnderDest.has("xPais")) {
+                        enderDest.setXPais(jsonEnderDest.get("xPais").toString());
+                    }
+                    if (jsonEnderDest.has("fone")) {
+                        enderDest.setFone(jsonEnderDest.get("fone").toString());
+                    }
+                    dest.setEnderDest(enderDest);
+                }
+                dest.setIndIEDest("9");
+                
+                infNFe.setDest(dest);
+            }
+            
             // Preenche os dados do contador.
             if (jsonInfNFe.has("autXML")) {
                 JSONObject jsonAutXML = jsonInfNFe.getJSONObject("autXML");
@@ -1191,6 +1195,8 @@ public class NFCeMonitor {
             System.out.println(responseJSON.toString());
             
             String response = responseJSON.toString();
+            
+            httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
             httpExchange.sendResponseHeaders(200, 0);
             OutputStream outputStream = httpExchange.getResponseBody();
             outputStream.write(response.getBytes());
@@ -1273,6 +1279,8 @@ public class NFCeMonitor {
                 System.out.println(responseJSON.toString());
 
                 String response = responseJSON.toString();
+                
+                httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
                 httpExchange.sendResponseHeaders(200, 0);
                 OutputStream outputStream = httpExchange.getResponseBody();
                 outputStream.write(response.getBytes());
@@ -1333,6 +1341,8 @@ public class NFCeMonitor {
                 System.out.println(responseJSON.toString());
 
                 String response = responseJSON.toString();
+                
+                httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
                 httpExchange.sendResponseHeaders(200, 0);
                 OutputStream outputStream = httpExchange.getResponseBody();
                 outputStream.write(response.getBytes());
@@ -1352,6 +1362,8 @@ public class NFCeMonitor {
                 System.out.println(responseJSON.toString());
 
                 String response = responseJSON.toString();
+                
+                httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
                 httpExchange.sendResponseHeaders(200, 0);
                 OutputStream outputStream = httpExchange.getResponseBody();
                 outputStream.write(response.getBytes());
@@ -1414,6 +1426,8 @@ public class NFCeMonitor {
                 System.out.println(responseJSON.toString());
 
                 String response = responseJSON.toString();
+                
+                httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
                 httpExchange.sendResponseHeaders(200, 0);
                 OutputStream outputStream = httpExchange.getResponseBody();
                 outputStream.write(response.getBytes());
@@ -1471,6 +1485,8 @@ public class NFCeMonitor {
                 System.out.println(responseJSON.toString());
 
                 String response = responseJSON.toString();
+                
+                httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
                 httpExchange.sendResponseHeaders(200, 0);
                 OutputStream outputStream = httpExchange.getResponseBody();
                 outputStream.write(response.getBytes());
@@ -1490,6 +1506,8 @@ public class NFCeMonitor {
                 System.out.println(responseJSON.toString());
 
                 String response = responseJSON.toString();
+                
+                httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
                 httpExchange.sendResponseHeaders(200, 0);
                 OutputStream outputStream = httpExchange.getResponseBody();
                 outputStream.write(response.getBytes());
@@ -1548,6 +1566,8 @@ public class NFCeMonitor {
                 System.out.println(responseJSON.toString());
 
                 String response = responseJSON.toString();
+                
+                httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
                 httpExchange.sendResponseHeaders(200, 0);
                 OutputStream outputStream = httpExchange.getResponseBody();
                 outputStream.write(response.getBytes());
@@ -1574,6 +1594,8 @@ public class NFCeMonitor {
                 System.out.println(responseJSON.toString());
 
                 String response = responseJSON.toString();
+                
+                httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
                 httpExchange.sendResponseHeaders(200, 0);
                 OutputStream outputStream = httpExchange.getResponseBody();
                 outputStream.write(response.getBytes());
@@ -1591,6 +1613,8 @@ public class NFCeMonitor {
                 System.out.println(responseJSON.toString());
 
                 String response = responseJSON.toString();
+                
+                httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
                 httpExchange.sendResponseHeaders(200, 0);
                 OutputStream outputStream = httpExchange.getResponseBody();
                 outputStream.write(response.getBytes());
@@ -1653,6 +1677,8 @@ public class NFCeMonitor {
                 System.out.println(responseJSON.toString());
 
                 String response = responseJSON.toString();
+                
+                httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
                 httpExchange.sendResponseHeaders(200, 0);
                 OutputStream outputStream = httpExchange.getResponseBody();
                 outputStream.write(response.getBytes());
@@ -1701,6 +1727,8 @@ public class NFCeMonitor {
                 System.out.println(responseJSON.toString());
 
                 String response = responseJSON.toString();
+                
+                httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
                 httpExchange.sendResponseHeaders(200, 0);
                 OutputStream outputStream = httpExchange.getResponseBody();
                 outputStream.write(response.getBytes());
@@ -1720,6 +1748,8 @@ public class NFCeMonitor {
                 System.out.println(responseJSON.toString());
 
                 String response = responseJSON.toString();
+                
+                httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
                 httpExchange.sendResponseHeaders(200, 0);
                 OutputStream outputStream = httpExchange.getResponseBody();
                 outputStream.write(response.getBytes());
@@ -1778,6 +1808,8 @@ public class NFCeMonitor {
                 System.out.println(responseJSON.toString());
 
                 String response = responseJSON.toString();
+                
+                httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
                 httpExchange.sendResponseHeaders(200, 0);
                 OutputStream outputStream = httpExchange.getResponseBody();
                 outputStream.write(response.getBytes());
@@ -1800,6 +1832,8 @@ public class NFCeMonitor {
                 System.out.println(responseJSON.toString());
 
                 String response = responseJSON.toString();
+                
+                httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
                 httpExchange.sendResponseHeaders(200, 0);
                 OutputStream outputStream = httpExchange.getResponseBody();
                 outputStream.write(response.getBytes());
@@ -1817,6 +1851,8 @@ public class NFCeMonitor {
                 System.out.println(responseJSON.toString());
 
                 String response = responseJSON.toString();
+                
+                httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
                 httpExchange.sendResponseHeaders(200, 0);
                 OutputStream outputStream = httpExchange.getResponseBody();
                 outputStream.write(response.getBytes());
