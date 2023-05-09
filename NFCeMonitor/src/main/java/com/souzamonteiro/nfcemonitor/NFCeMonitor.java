@@ -1076,7 +1076,7 @@ public class NFCeMonitor {
                         xml = XmlNfeUtil.criaNfeProc(enviNFe, retornoNfe.getProtNFe().get(0));
                         
                         // Salva o XML da NFC-e.
-                        FileWriter writer = new FileWriter(caminhoXML + "/NFe" + chave + ".xml");
+                        FileWriter writer = new FileWriter(caminhoXML + "/" + chave + ".xml");
                         writer.write(xml);
                         writer.close();      
                         
@@ -1097,7 +1097,7 @@ public class NFCeMonitor {
                         xml = XmlNfeUtil.criaNfeProc(enviNFe, retorno.getProtNFe());
                         
                         // Salva o XML da NFC-e.
-                        FileWriter writer = new FileWriter(caminhoXML + "/NFe" + chave + ".xml");
+                        FileWriter writer = new FileWriter(caminhoXML + "/" + chave + ".xml");
                         writer.write(xml);
                         writer.close();      
                        
@@ -1160,7 +1160,7 @@ public class NFCeMonitor {
                         System.out.println("XML Final: " + xml);
 
                         // Salva o XML da NFC-e.
-                        FileWriter writer = new FileWriter(caminhoXML + "/NFe" + chave + ".xml");
+                        FileWriter writer = new FileWriter(caminhoXML + "/" + chave + ".xml");
                         writer.write(xml);
                         writer.close();
                     } catch (Exception error) {
