@@ -86,12 +86,12 @@ public class NFCeMonitor {
         int porta = Integer.parseInt(configuracoes.get("porta").toString());
             
         HttpServer server = HttpServer.create(new InetSocketAddress(porta), 0);
-        server.createContext("/NFeAutorizacao", new NFeAutorizacaoHandler());
-        server.createContext("/NFeCancelamento", new NFeCancelamentoHandler());
-        server.createContext("/NFeCartaCorrecao", new NFeCartaCorrecaoHandler());
-        server.createContext("/NFeConsulta", new NFeConsultaHandler());
-        server.createContext("/NFeInutilizacao", new NFeInutilizacaoHandler());
         server.createContext("/NFeStatusServico", new NFeStatusServicoHandler());
+        server.createContext("/NFeAutorizacao", new NFeAutorizacaoHandler());
+        server.createContext("/NFeConsulta", new NFeConsultaHandler());
+        server.createContext("/NFeCartaCorrecao", new NFeCartaCorrecaoHandler());
+        server.createContext("/NFeCancelamento", new NFeCancelamentoHandler());
+        server.createContext("/NFeInutilizacao", new NFeInutilizacaoHandler());
         server.setExecutor(null);
         server.start();
     }
@@ -135,6 +135,148 @@ public class NFCeMonitor {
             }
         }
         return result;
+    }
+    
+    /**
+     * Preenche os dados do QR Code.
+     * 
+     * @param   enviNFe  Dados da NF-e.
+     * @param   config   Configurações do certificado digital e do serviço NF-e.
+     * @param   idToken  Identificador do CSC.
+     * @param   csc      CSC de autenticação da NF-e.
+     * @return           Map contendo os parâmetros passados na URL.
+     */
+    private static String preencheQRCode(TEnviNFe enviNFe, ConfiguracoesNfe config, String idToken, String csc) throws NfeException, NoSuchAlgorithmException {
+        return NFCeUtil.getCodeQRCode(
+            enviNFe.getNFe().get(0).getInfNFe().getId().substring(3),
+            config.getAmbiente().getCodigo(),
+            idToken,
+            csc,
+            WebServiceUtil.getUrl(config,DocumentoEnum.NFCE, ServicosEnum.URL_QRCODE));
+    }
+    
+    /**
+     * Preenche os dados do QR Code de contingência.
+     * 
+     * @param   enviNFe  Dados da NF-e.
+     * @param   config   Configurações do certificado digital e do serviço NF-e.
+     * @param   idToken  Identificador do CSC.
+     * @param   csc      CSC de autenticação da NF-e.
+     * @return           Map contendo os parâmetros passados na URL.
+     */
+    private static String preencheQRCodeContingencia(TEnviNFe enviNFe, ConfiguracoesNfe config, String idToken, String csc) throws NfeException, NoSuchAlgorithmException {
+        return NFCeUtil.getCodeQRCodeContingencia(
+            enviNFe.getNFe().get(0).getInfNFe().getId().substring(3),
+            config.getAmbiente().getCodigo(),
+            enviNFe.getNFe().get(0).getInfNFe().getIde().getDhEmi(),
+            enviNFe.getNFe().get(0).getInfNFe().getTotal().getICMSTot().getVNF(),
+            Base64.getEncoder().encodeToString(enviNFe.getNFe().get(0).getSignature().getSignedInfo().getReference().getDigestValue()),
+            idToken,
+            csc,
+            WebServiceUtil.getUrl(config, DocumentoEnum.NFCE, ServicosEnum.URL_QRCODE));
+    }
+    
+    /**
+     * Processa o serviço NFeStatusServico.
+     */
+    static class NFeStatusServicoHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange httpExchange) throws IOException {
+            String caminhoNFCeMonitor = System.getProperty("user.dir");
+        
+            String caminhoArquivoConfiguracoes = caminhoNFCeMonitor + "/NFCeMonitor.json";
+            String jsonConfiguracoes = readFile(caminhoArquivoConfiguracoes);
+
+            JSONObject configuracoes = new JSONObject(jsonConfiguracoes);
+            
+            InputStream inputStream = httpExchange.getRequestBody(); 
+            Scanner scanner = new Scanner(inputStream);
+            String linha;
+            String dados = new String();
+            
+            while (scanner.hasNextLine()) {
+                linha = scanner.nextLine();
+                dados = dados + linha;
+            }
+            
+            JSONObject json = new JSONObject(dados);
+            
+            String cStat = "";
+            String xMotivo = "";
+            
+            /*
+             * Prepara o XML da NFC-e.
+             */
+            
+            // Inicia As configurações.
+            ConfiguracoesNfe config;
+            
+            try {
+                config = Config.iniciaConfiguracoes();
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+                
+                cStat = "000";
+                xMotivo = e.getMessage();
+                
+                JSONObject responseJSON = new JSONObject();
+                responseJSON.put("cStat", cStat);
+                responseJSON.put("xMotivo", xMotivo);
+                
+                System.out.println(responseJSON.toString());
+
+                String response = responseJSON.toString();
+                
+                httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+                httpExchange.sendResponseHeaders(200, 0);
+                OutputStream outputStream = httpExchange.getResponseBody();
+                outputStream.write(response.getBytes());
+                outputStream.close();
+                
+                return;
+            }
+            
+            try {
+                // Consulta o status do serviço.
+                TRetConsStatServ retorno = Nfe.statusServico(config, DocumentoEnum.NFE);
+                
+                cStat = retorno.getCStat();
+                xMotivo = retorno.getXMotivo();
+                
+                JSONObject responseJSON = new JSONObject();
+                responseJSON.put("cStat", cStat);
+                responseJSON.put("xMotivo", xMotivo);
+                
+                System.out.println(responseJSON.toString());
+
+                String response = responseJSON.toString();
+                
+                httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+                httpExchange.sendResponseHeaders(200, 0);
+                OutputStream outputStream = httpExchange.getResponseBody();
+                outputStream.write(response.getBytes());
+                outputStream.close();
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+                
+                cStat = "000";
+                xMotivo = e.getMessage();
+                
+                JSONObject responseJSON = new JSONObject();
+                responseJSON.put("cStat", cStat);
+                responseJSON.put("xMotivo", xMotivo);
+                
+                System.out.println(responseJSON.toString());
+
+                String response = responseJSON.toString();
+                
+                httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+                httpExchange.sendResponseHeaders(200, 0);
+                OutputStream outputStream = httpExchange.getResponseBody();
+                outputStream.write(response.getBytes());
+                outputStream.close();
+            }
+        }
     }
     
     /**
@@ -1209,31 +1351,10 @@ public class NFCeMonitor {
         }
     }
     
-    private static String preencheQRCode(TEnviNFe enviNFe, ConfiguracoesNfe config, String idToken, String csc) throws NfeException, NoSuchAlgorithmException {
-        return NFCeUtil.getCodeQRCode(
-            enviNFe.getNFe().get(0).getInfNFe().getId().substring(3),
-            config.getAmbiente().getCodigo(),
-            idToken,
-            csc,
-            WebServiceUtil.getUrl(config,DocumentoEnum.NFCE, ServicosEnum.URL_QRCODE));
-    }
-    
-    private static String preencheQRCodeContingencia(TEnviNFe enviNFe, ConfiguracoesNfe config, String idToken, String csc) throws NfeException, NoSuchAlgorithmException {
-        return NFCeUtil.getCodeQRCodeContingencia(
-            enviNFe.getNFe().get(0).getInfNFe().getId().substring(3),
-            config.getAmbiente().getCodigo(),
-            enviNFe.getNFe().get(0).getInfNFe().getIde().getDhEmi(),
-            enviNFe.getNFe().get(0).getInfNFe().getTotal().getICMSTot().getVNF(),
-            Base64.getEncoder().encodeToString(enviNFe.getNFe().get(0).getSignature().getSignedInfo().getReference().getDigestValue()),
-            idToken,
-            csc,
-            WebServiceUtil.getUrl(config, DocumentoEnum.NFCE, ServicosEnum.URL_QRCODE));
-    }
-    
     /**
-     * Processa o serviço NFeCancelamento.
+     * Processa o serviço NFeConsulta.
      */
-    static class NFeCancelamentoHandler implements HttpHandler {
+    static class NFeConsultaHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange httpExchange) throws IOException {
             String caminhoNFCeMonitor = System.getProperty("user.dir");
@@ -1257,8 +1378,6 @@ public class NFCeMonitor {
             
             String cStat = "";
             String xMotivo = "";
-            String nProt = "";
-            String xml = "";
             
             /*
              * Prepara o XML da NFC-e.
@@ -1278,8 +1397,6 @@ public class NFCeMonitor {
                 JSONObject responseJSON = new JSONObject();
                 responseJSON.put("cStat", cStat);
                 responseJSON.put("xMotivo", xMotivo);
-                responseJSON.put("nProt", nProt);
-                responseJSON.put("xml", xml);
                 
                 System.out.println(responseJSON.toString());
 
@@ -1294,54 +1411,20 @@ public class NFCeMonitor {
                 return;
             }
             
-            JSONObject jsonInfEvento = json.getJSONObject("infEvento");
+            JSONObject jsonCconsSitNFe = json.getJSONObject("consSitNFe");
             
-            String cnpj = jsonInfEvento.get("CNPJ").toString();
-            String chNFe = jsonInfEvento.get("chNFe").toString();
-            String nProtocolo = jsonInfEvento.get("nProt").toString();
-            String nSeqEvento = jsonInfEvento.get("nSeqEvento").toString();
-            String descEvento = jsonInfEvento.get("descEvento").toString();
-            
-            int sequenciaEvento = Integer.parseInt(nSeqEvento);
-            
-            // Cria um evento para a Carta de Correção.
-            Evento cancelamento = new Evento();
-            // CNPJ do emitente.
-            cancelamento.setCnpj(cnpj);
-            // Chave da NF-e.
-            cancelamento.setChave(chNFe);
-            // Protocolo de autorização da NF-e.
-            cancelamento.setProtocolo(nProtocolo);
-            // Data do cancelamento.
-            cancelamento.setDataEvento(LocalDateTime.now());
-            // Sequência do evento. Podem ser feitos até 20 cancelamentos.
-            cancelamento.setSequencia(sequenciaEvento);
-            // Texto do motivo do cancelamento.
-            cancelamento.setMotivo(descEvento);
+            String chNFe = jsonCconsSitNFe.get("chNFe").toString();
             
             try {
-                //Monta o Evento de Cancelamento
-                br.com.swconsultoria.nfe.schema.envEventoCancNFe.TEnvEvento enviEvento = CancelamentoUtil.montaCancelamento(cancelamento, config);
-
-                //Envia o Evento de Cancelamento
-                br.com.swconsultoria.nfe.schema.envEventoCancNFe.TRetEnvEvento retorno = Nfe.cancelarNfe(config, enviEvento, true, DocumentoEnum.NFE);
-
-                //Valida o Retorno do Cancelamento
-                RetornoUtil.validaCancelamento(retorno);
-
-                // Obtém o protocolo da Carta Correção.
+                // Envia a consulta.
+                TRetConsSitNFe retorno = Nfe.consultaXml(config, chNFe, DocumentoEnum.NFE);
+                
+                cStat = retorno.getCStat();
+                xMotivo = retorno.getXMotivo();
+                
                 JSONObject responseJSON = new JSONObject();
-                
-                retorno.getRetEvento().forEach(resultado -> {
-                    responseJSON.put("cStat", resultado.getInfEvento().getCStat());
-                    responseJSON.put("xMotivo", resultado.getInfEvento().getXMotivo());
-                    responseJSON.put("nProt", resultado.getInfEvento().getNProt());
-                });
-                
-                // Cria o XML da solicitação.
-                xml = CancelamentoUtil.criaProcEventoCancelamento(config, enviEvento, retorno.getRetEvento().get(0));
-                
-                responseJSON.put("xml", xml);
+                responseJSON.put("cStat", cStat);
+                responseJSON.put("xMotivo", xMotivo);
                 
                 System.out.println(responseJSON.toString());
 
@@ -1361,8 +1444,6 @@ public class NFCeMonitor {
                 JSONObject responseJSON = new JSONObject();
                 responseJSON.put("cStat", cStat);
                 responseJSON.put("xMotivo", xMotivo);
-                responseJSON.put("nProt", nProt);
-                responseJSON.put("xml", xml);
                 
                 System.out.println(responseJSON.toString());
 
@@ -1522,9 +1603,9 @@ public class NFCeMonitor {
     }
     
     /**
-     * Processa o serviço NFeConsulta.
+     * Processa o serviço NFeCancelamento.
      */
-    static class NFeConsultaHandler implements HttpHandler {
+    static class NFeCancelamentoHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange httpExchange) throws IOException {
             String caminhoNFCeMonitor = System.getProperty("user.dir");
@@ -1548,6 +1629,8 @@ public class NFCeMonitor {
             
             String cStat = "";
             String xMotivo = "";
+            String nProt = "";
+            String xml = "";
             
             /*
              * Prepara o XML da NFC-e.
@@ -1567,6 +1650,8 @@ public class NFCeMonitor {
                 JSONObject responseJSON = new JSONObject();
                 responseJSON.put("cStat", cStat);
                 responseJSON.put("xMotivo", xMotivo);
+                responseJSON.put("nProt", nProt);
+                responseJSON.put("xml", xml);
                 
                 System.out.println(responseJSON.toString());
 
@@ -1581,20 +1666,54 @@ public class NFCeMonitor {
                 return;
             }
             
-            JSONObject jsonCconsSitNFe = json.getJSONObject("consSitNFe");
+            JSONObject jsonInfEvento = json.getJSONObject("infEvento");
             
-            String chNFe = jsonCconsSitNFe.get("chNFe").toString();
+            String cnpj = jsonInfEvento.get("CNPJ").toString();
+            String chNFe = jsonInfEvento.get("chNFe").toString();
+            String nProtocolo = jsonInfEvento.get("nProt").toString();
+            String nSeqEvento = jsonInfEvento.get("nSeqEvento").toString();
+            String descEvento = jsonInfEvento.get("descEvento").toString();
+            
+            int sequenciaEvento = Integer.parseInt(nSeqEvento);
+            
+            // Cria um evento para a Carta de Correção.
+            Evento cancelamento = new Evento();
+            // CNPJ do emitente.
+            cancelamento.setCnpj(cnpj);
+            // Chave da NF-e.
+            cancelamento.setChave(chNFe);
+            // Protocolo de autorização da NF-e.
+            cancelamento.setProtocolo(nProtocolo);
+            // Data do cancelamento.
+            cancelamento.setDataEvento(LocalDateTime.now());
+            // Sequência do evento. Podem ser feitos até 20 cancelamentos.
+            cancelamento.setSequencia(sequenciaEvento);
+            // Texto do motivo do cancelamento.
+            cancelamento.setMotivo(descEvento);
             
             try {
-                // Envia a consulta.
-                TRetConsSitNFe retorno = Nfe.consultaXml(config, chNFe, DocumentoEnum.NFE);
-                
-                cStat = retorno.getCStat();
-                xMotivo = retorno.getXMotivo();
-                
+                //Monta o Evento de Cancelamento
+                br.com.swconsultoria.nfe.schema.envEventoCancNFe.TEnvEvento enviEvento = CancelamentoUtil.montaCancelamento(cancelamento, config);
+
+                //Envia o Evento de Cancelamento
+                br.com.swconsultoria.nfe.schema.envEventoCancNFe.TRetEnvEvento retorno = Nfe.cancelarNfe(config, enviEvento, true, DocumentoEnum.NFE);
+
+                //Valida o Retorno do Cancelamento
+                RetornoUtil.validaCancelamento(retorno);
+
+                // Obtém o protocolo da Carta Correção.
                 JSONObject responseJSON = new JSONObject();
-                responseJSON.put("cStat", cStat);
-                responseJSON.put("xMotivo", xMotivo);
+                
+                retorno.getRetEvento().forEach(resultado -> {
+                    responseJSON.put("cStat", resultado.getInfEvento().getCStat());
+                    responseJSON.put("xMotivo", resultado.getInfEvento().getXMotivo());
+                    responseJSON.put("nProt", resultado.getInfEvento().getNProt());
+                });
+                
+                // Cria o XML da solicitação.
+                xml = CancelamentoUtil.criaProcEventoCancelamento(config, enviEvento, retorno.getRetEvento().get(0));
+                
+                responseJSON.put("xml", xml);
                 
                 System.out.println(responseJSON.toString());
 
@@ -1614,6 +1733,8 @@ public class NFCeMonitor {
                 JSONObject responseJSON = new JSONObject();
                 responseJSON.put("cStat", cStat);
                 responseJSON.put("xMotivo", xMotivo);
+                responseJSON.put("nProt", nProt);
+                responseJSON.put("xml", xml);
                 
                 System.out.println(responseJSON.toString());
 
@@ -1749,109 +1870,6 @@ public class NFCeMonitor {
                 responseJSON.put("xMotivo", xMotivo);
                 responseJSON.put("nProt", nProt);
                 responseJSON.put("xml", xml);
-                
-                System.out.println(responseJSON.toString());
-
-                String response = responseJSON.toString();
-                
-                httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
-                httpExchange.sendResponseHeaders(200, 0);
-                OutputStream outputStream = httpExchange.getResponseBody();
-                outputStream.write(response.getBytes());
-                outputStream.close();
-            }
-        }
-    }
-    
-    /**
-     * Processa o serviço NFeStatusServico.
-     */
-    static class NFeStatusServicoHandler implements HttpHandler {
-        @Override
-        public void handle(HttpExchange httpExchange) throws IOException {
-            String caminhoNFCeMonitor = System.getProperty("user.dir");
-        
-            String caminhoArquivoConfiguracoes = caminhoNFCeMonitor + "/NFCeMonitor.json";
-            String jsonConfiguracoes = readFile(caminhoArquivoConfiguracoes);
-
-            JSONObject configuracoes = new JSONObject(jsonConfiguracoes);
-            
-            InputStream inputStream = httpExchange.getRequestBody(); 
-            Scanner scanner = new Scanner(inputStream);
-            String linha;
-            String dados = new String();
-            
-            while (scanner.hasNextLine()) {
-                linha = scanner.nextLine();
-                dados = dados + linha;
-            }
-            
-            JSONObject json = new JSONObject(dados);
-            
-            String cStat = "";
-            String xMotivo = "";
-            
-            /*
-             * Prepara o XML da NFC-e.
-             */
-            
-            // Inicia As configurações.
-            ConfiguracoesNfe config;
-            
-            try {
-                config = Config.iniciaConfiguracoes();
-            } catch (Exception e) {
-                System.out.println(e.getMessage());
-                
-                cStat = "000";
-                xMotivo = e.getMessage();
-                
-                JSONObject responseJSON = new JSONObject();
-                responseJSON.put("cStat", cStat);
-                responseJSON.put("xMotivo", xMotivo);
-                
-                System.out.println(responseJSON.toString());
-
-                String response = responseJSON.toString();
-                
-                httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
-                httpExchange.sendResponseHeaders(200, 0);
-                OutputStream outputStream = httpExchange.getResponseBody();
-                outputStream.write(response.getBytes());
-                outputStream.close();
-                
-                return;
-            }
-            
-            try {
-                // Consulta o status do serviço.
-                TRetConsStatServ retorno = Nfe.statusServico(config, DocumentoEnum.NFE);
-                
-                cStat = retorno.getCStat();
-                xMotivo = retorno.getXMotivo();
-                
-                JSONObject responseJSON = new JSONObject();
-                responseJSON.put("cStat", cStat);
-                responseJSON.put("xMotivo", xMotivo);
-                
-                System.out.println(responseJSON.toString());
-
-                String response = responseJSON.toString();
-                
-                httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
-                httpExchange.sendResponseHeaders(200, 0);
-                OutputStream outputStream = httpExchange.getResponseBody();
-                outputStream.write(response.getBytes());
-                outputStream.close();
-            } catch (Exception e) {
-                System.out.println(e.getMessage());
-                
-                cStat = "000";
-                xMotivo = e.getMessage();
-                
-                JSONObject responseJSON = new JSONObject();
-                responseJSON.put("cStat", cStat);
-                responseJSON.put("xMotivo", xMotivo);
                 
                 System.out.println(responseJSON.toString());
 
