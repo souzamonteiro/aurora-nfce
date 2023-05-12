@@ -801,6 +801,15 @@ public class NFCeMonitor {
                     if (jsonICMS51.has("pICMS")) {
                         icms51.setPICMS(jsonICMS51.get("pICMS").toString());
                     }
+                    if (jsonICMS51.has("vICMSOp")) {
+                        icms51.setPICMS(jsonICMS51.get("vICMSOp").toString());
+                    }
+                    if (jsonICMS51.has("pDif")) {
+                        icms51.setPICMS(jsonICMS51.get("pDif").toString());
+                    }
+                    if (jsonICMS51.has("vICMSDif")) {
+                        icms51.setPICMS(jsonICMS51.get("vICMSDif").toString());
+                    }
                     if (jsonICMS51.has("vICMS")) {
                         icms51.setVICMS(jsonICMS51.get("vICMS").toString());
                     }
