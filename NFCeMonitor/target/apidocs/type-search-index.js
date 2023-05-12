@@ -1,0 +1,1 @@
+typeSearchIndex = [{"l":"All Classes","url":"allclasses-index.html"},{"p":"com.souzamonteiro.nfcemonitor","l":"Config"},{"p":"com.souzamonteiro.nfcemonitor","l":"NFCeMonitor"}]

@@ -1,0 +1,120 @@
+@options
+@packages
+-classpath
+'/home/roberto/.m2/repository/br/com/swconsultoria/java_certificado/2.9/java_certificado-2.9.jar:/home/roberto/.m2/repository/commons-httpclient/commons-httpclient/3.1/commons-httpclient-3.1.jar:/home/roberto/.m2/repository/commons-logging/commons-logging/1.0.4/commons-logging-1.0.4.jar:/home/roberto/.m2/repository/commons-codec/commons-codec/1.2/commons-codec-1.2.jar:/home/roberto/.m2/repository/org/bouncycastle/bcprov-jdk15on/1.70/bcprov-jdk15on-1.70.jar:/home/roberto/.m2/repository/br/com/swconsultoria/java-nfe/4.00.22/java-nfe-4.00.22.jar:/home/roberto/.m2/repository/org/ini4j/ini4j/0.5.4/ini4j-0.5.4.jar:/home/roberto/.m2/repository/org/apache/httpcomponents/httpcore/4.4.6/httpcore-4.4.6.jar:/home/roberto/.m2/repository/com/sun/xml/bind/jaxb-impl/2.3.1/jaxb-impl-2.3.1.jar:/home/roberto/.m2/repository/com/sun/xml/bind/jaxb-xjc/2.3.1/jaxb-xjc-2.3.1.jar:/home/roberto/.m2/repository/com/sun/xml/bind/jaxb-core/2.3.0.1/jaxb-core-2.3.0.1.jar:/home/roberto/.m2/repository/org/apache/axis2/axis2-kernel/1.7.5/axis2-kernel-1.7.5.jar:/home/roberto/.m2/repository/org/apache/geronimo/specs/geronimo-ws-metadata_2.0_spec/1.1.2/geronimo-ws-metadata_2.0_spec-1.1.2.jar:/home/roberto/.m2/repository/org/apache/geronimo/specs/geronimo-jta_1.1_spec/1.1/geronimo-jta_1.1_spec-1.1.jar:/home/roberto/.m2/repository/wsdl4j/wsdl4j/1.6.2/wsdl4j-1.6.2.jar:/home/roberto/.m2/repository/org/apache/ws/xmlschema/xmlschema-core/2.2.1/xmlschema-core-2.2.1.jar:/home/roberto/.m2/repository/org/apache/neethi/neethi/3.0.3/neethi-3.0.3.jar:/home/roberto/.m2/repository/org/apache/woden/woden-core/1.0M10/woden-core-1.0M10.jar:/home/roberto/.m2/repository/javax/ws/rs/jsr311-api/1.1.1/jsr311-api-1.1.1.jar:/home/roberto/.m2/repository/org/apache/axis2/axis2-adb/1.7.5/axis2-adb-1.7.5.jar:/home/roberto/.m2/repository/org/apache/geronimo/specs/geronimo-activation_1.1_spec/1.0.2/geronimo-activation_1.1_spec-1.0.2.jar:/home/roberto/.m2/repository/org/apache/axis2/axis2-jaxws/1.7.5/axis2-jaxws-1.7.5.jar:/home/roberto/.m2/repository/org/apache/geronimo/specs/geronimo-annotation_1.0_spec/1.1/geronimo-annotation_1.0_spec-1.1.jar:/home/roberto/.m2/repository/org/apache/geronimo/specs/geronimo-jaxws_2.2_spec/1.0/geronimo-jaxws_2.2_spec-1.0.jar:/home/roberto/.m2/repository/org/apache/axis2/axis2-saaj/1.7.5/axis2-saaj-1.7.5.jar:/home/roberto/.m2/repository/org/apache/geronimo/specs/geronimo-saaj_1.3_spec/1.0.1/geronimo-saaj_1.3_spec-1.0.1.jar:/home/roberto/.m2/repository/org/apache/axis2/axis2-metadata/1.7.5/axis2-metadata-1.7.5.jar:/home/roberto/.m2/repository/com/sun/xml/ws/jaxws-tools/2.1.3/jaxws-tools-2.1.3.jar:/home/roberto/.m2/repository/org/apache/geronimo/specs/geronimo-javamail_1.4_spec/1.6/geronimo-javamail_1.4_spec-1.6.jar:/home/roberto/.m2/repository/xml-resolver/xml-resolver/1.2/xml-resolver-1.2.jar:/home/roberto/.m2/repository/javax/xml/bind/jaxb-api/2.2.6/jaxb-api-2.2.6.jar:/home/roberto/.m2/repository/org/apache/axis2/axis2-transport-http/1.7.5/axis2-transport-http-1.7.5.jar:/home/roberto/.m2/repository/org/apache/httpcomponents/httpclient/4.5.2/httpclient-4.5.2.jar:/home/roberto/.m2/repository/org/apache/axis2/axis2-transport-local/1.7.5/axis2-transport-local-1.7.5.jar:/home/roberto/.m2/repository/org/apache/ws/commons/axiom/axiom-api/1.2.20/axiom-api-1.2.20.jar:/home/roberto/.m2/repository/jaxen/jaxen/1.1.6/jaxen-1.1.6.jar:/home/roberto/.m2/repository/org/apache/geronimo/specs/geronimo-stax-api_1.0_spec/1.0.1/geronimo-stax-api_1.0_spec-1.0.1.jar:/home/roberto/.m2/repository/org/apache/james/apache-mime4j-core/0.7.2/apache-mime4j-core-0.7.2.jar:/home/roberto/.m2/repository/br/com/swconsultoria/java-danfe/1.2/java-danfe-1.2.jar:/home/roberto/.m2/repository/net/sf/jasperreports/jasperreports/6.12.0/jasperreports-6.12.0.jar:/home/roberto/.m2/repository/commons-beanutils/commons-beanutils/1.9.4/commons-beanutils-1.9.4.jar:/home/roberto/.m2/repository/commons-collections/commons-collections/3.2.2/commons-collections-3.2.2.jar:/home/roberto/.m2/repository/commons-digester/commons-digester/2.1/commons-digester-2.1.jar:/home/roberto/.m2/repository/org/apache/commons/commons-collections4/4.2/commons-collections4-4.2.jar:/home/roberto/.m2/repository/org/jfree/jcommon/1.0.23/jcommon-1.0.23.jar:/home/roberto/.m2/repository/org/jfree/jfreechart/1.0.19/jfreechart-1.0.19.jar:/home/roberto/.m2/repository/org/eclipse/jdt/core/compiler/ecj/4.4.2/ecj-4.4.2.jar:/home/roberto/.m2/repository/org/codehaus/castor/castor-xml/1.4.1/castor-xml-1.4.1.jar:/home/roberto/.m2/repository/org/codehaus/castor/castor-core/1.4.1/castor-core-1.4.1.jar:/home/roberto/.m2/repository/org/apache/commons/commons-lang3/3.4/commons-lang3-3.4.jar:/home/roberto/.m2/repository/javax/inject/javax.inject/1/javax.inject-1.jar:/home/roberto/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.10.0/jackson-core-2.10.0.jar:/home/roberto/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.10.0/jackson-databind-2.10.0.jar:/home/roberto/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.10.0/jackson-annotations-2.10.0.jar:/home/roberto/.m2/repository/com/lowagie/itext/2.1.7/itext-2.1.7.jar:/home/roberto/.m2/repository/bouncycastle/bcmail-jdk14/138/bcmail-jdk14-138.jar:/home/roberto/.m2/repository/bouncycastle/bcprov-jdk14/138/bcprov-jdk14-138.jar:/home/roberto/.m2/repository/org/bouncycastle/bctsp-jdk14/1.38/bctsp-jdk14-1.38.jar:/home/roberto/.m2/repository/org/bouncycastle/bcprov-jdk14/1.38/bcprov-jdk14-1.38.jar:/home/roberto/.m2/repository/org/bouncycastle/bcmail-jdk14/1.38/bcmail-jdk14-1.38.jar:/home/roberto/.m2/repository/net/sf/jasperreports/jasperreports-fonts/6.12.0/jasperreports-fonts-6.12.0.jar:/home/roberto/.m2/repository/commons-io/commons-io/2.8.0/commons-io-2.8.0.jar:/home/roberto/.m2/repository/xalan/xalan/2.7.2/xalan-2.7.2.jar:/home/roberto/.m2/repository/xalan/serializer/2.7.2/serializer-2.7.2.jar:/home/roberto/.m2/repository/xml-apis/xml-apis/1.3.04/xml-apis-1.3.04.jar:/home/roberto/.m2/repository/net/sourceforge/barbecue/barbecue/1.5-beta1/barbecue-1.5-beta1.jar:/home/roberto/.m2/repository/com/google/zxing/core/3.2.1/core-3.2.1.jar:/home/roberto/.m2/repository/com/google/zxing/javase/3.2.1/javase-3.2.1.jar:/home/roberto/.m2/repository/com/beust/jcommander/1.48/jcommander-1.48.jar:/home/roberto/.m2/repository/org/json/json/20230227/json-20230227.jar'
+-encoding
+'UTF-8'
+-protected
+-source
+'11'
+-sourcepath
+'/home/roberto/projects/aurora/aurora-nfce/NFCeMonitor/src/main/java'
+-author
+-bottom
+'Copyright &#169; 2023. All rights reserved.'
+-charset
+'UTF-8'
+-d
+'/home/roberto/projects/aurora/aurora-nfce/NFCeMonitor/target/apidocs'
+-docencoding
+'UTF-8'
+-doctitle
+'NFCeMonitor 1.0-SNAPSHOT API'
+-linkoffline
+'https://docs.oracle.com/en/java/javase/11/docs/api' '/home/roberto/projects/aurora/aurora-nfce/NFCeMonitor/target/javadoc-bundle-options'
+-use
+-version
+-windowtitle
+'NFCeMonitor 1.0-SNAPSHOT API'
+com.souzamonteiro.nfcemonitor
+/home/roberto/.m2/repository/br/com/swconsultoria/java_certificado/2.9/java_certificado-2.9.jar = 1681841176443
+/home/roberto/.m2/repository/commons-httpclient/commons-httpclient/3.1/commons-httpclient-3.1.jar = 1681839444747
+/home/roberto/.m2/repository/commons-logging/commons-logging/1.0.4/commons-logging-1.0.4.jar = 1681839443959
+/home/roberto/.m2/repository/commons-codec/commons-codec/1.2/commons-codec-1.2.jar = 1681839444971
+/home/roberto/.m2/repository/org/bouncycastle/bcprov-jdk15on/1.70/bcprov-jdk15on-1.70.jar = 1681841193712
+/home/roberto/.m2/repository/br/com/swconsultoria/java-nfe/4.00.22/java-nfe-4.00.22.jar = 1681841181920
+/home/roberto/.m2/repository/org/ini4j/ini4j/0.5.4/ini4j-0.5.4.jar = 1681839444963
+/home/roberto/.m2/repository/org/apache/httpcomponents/httpcore/4.4.6/httpcore-4.4.6.jar = 1681839446091
+/home/roberto/.m2/repository/com/sun/xml/bind/jaxb-impl/2.3.1/jaxb-impl-2.3.1.jar = 1681839448043
+/home/roberto/.m2/repository/com/sun/xml/bind/jaxb-xjc/2.3.1/jaxb-xjc-2.3.1.jar = 1681839448891
+/home/roberto/.m2/repository/com/sun/xml/bind/jaxb-core/2.3.0.1/jaxb-core-2.3.0.1.jar = 1681839446823
+/home/roberto/.m2/repository/org/apache/axis2/axis2-kernel/1.7.5/axis2-kernel-1.7.5.jar = 1681839448639
+/home/roberto/.m2/repository/org/apache/geronimo/specs/geronimo-ws-metadata_2.0_spec/1.1.2/geronimo-ws-metadata_2.0_spec-1.1.2.jar = 1681839448431
+/home/roberto/.m2/repository/org/apache/geronimo/specs/geronimo-jta_1.1_spec/1.1/geronimo-jta_1.1_spec-1.1.jar = 1681839448459
+/home/roberto/.m2/repository/wsdl4j/wsdl4j/1.6.2/wsdl4j-1.6.2.jar = 1681839449211
+/home/roberto/.m2/repository/org/apache/ws/xmlschema/xmlschema-core/2.2.1/xmlschema-core-2.2.1.jar = 1681839449251
+/home/roberto/.m2/repository/org/apache/neethi/neethi/3.0.3/neethi-3.0.3.jar = 1681839448927
+/home/roberto/.m2/repository/org/apache/woden/woden-core/1.0M10/woden-core-1.0M10.jar = 1681839449327
+/home/roberto/.m2/repository/javax/ws/rs/jsr311-api/1.1.1/jsr311-api-1.1.1.jar = 1681839449119
+/home/roberto/.m2/repository/org/apache/axis2/axis2-adb/1.7.5/axis2-adb-1.7.5.jar = 1681839450639
+/home/roberto/.m2/repository/org/apache/geronimo/specs/geronimo-activation_1.1_spec/1.0.2/geronimo-activation_1.1_spec-1.0.2.jar = 1681839449579
+/home/roberto/.m2/repository/org/apache/axis2/axis2-jaxws/1.7.5/axis2-jaxws-1.7.5.jar = 1681839451423
+/home/roberto/.m2/repository/org/apache/geronimo/specs/geronimo-annotation_1.0_spec/1.1/geronimo-annotation_1.0_spec-1.1.jar = 1681839449679
+/home/roberto/.m2/repository/org/apache/geronimo/specs/geronimo-jaxws_2.2_spec/1.0/geronimo-jaxws_2.2_spec-1.0.jar = 1681839449963
+/home/roberto/.m2/repository/org/apache/axis2/axis2-saaj/1.7.5/axis2-saaj-1.7.5.jar = 1681839449979
+/home/roberto/.m2/repository/org/apache/geronimo/specs/geronimo-saaj_1.3_spec/1.0.1/geronimo-saaj_1.3_spec-1.0.1.jar = 1681839450139
+/home/roberto/.m2/repository/org/apache/axis2/axis2-metadata/1.7.5/axis2-metadata-1.7.5.jar = 1681839450919
+/home/roberto/.m2/repository/com/sun/xml/ws/jaxws-tools/2.1.3/jaxws-tools-2.1.3.jar = 1681839451431
+/home/roberto/.m2/repository/org/apache/geronimo/specs/geronimo-javamail_1.4_spec/1.6/geronimo-javamail_1.4_spec-1.6.jar = 1681839451107
+/home/roberto/.m2/repository/xml-resolver/xml-resolver/1.2/xml-resolver-1.2.jar = 1681839451207
+/home/roberto/.m2/repository/javax/xml/bind/jaxb-api/2.2.6/jaxb-api-2.2.6.jar = 1681839451515
+/home/roberto/.m2/repository/org/apache/axis2/axis2-transport-http/1.7.5/axis2-transport-http-1.7.5.jar = 1681839451995
+/home/roberto/.m2/repository/org/apache/httpcomponents/httpclient/4.5.2/httpclient-4.5.2.jar = 1681839453439
+/home/roberto/.m2/repository/org/apache/axis2/axis2-transport-local/1.7.5/axis2-transport-local-1.7.5.jar = 1681839451651
+/home/roberto/.m2/repository/org/apache/ws/commons/axiom/axiom-api/1.2.20/axiom-api-1.2.20.jar = 1681839452751
+/home/roberto/.m2/repository/jaxen/jaxen/1.1.6/jaxen-1.1.6.jar = 1681839452587
+/home/roberto/.m2/repository/org/apache/geronimo/specs/geronimo-stax-api_1.0_spec/1.0.1/geronimo-stax-api_1.0_spec-1.0.1.jar = 1681839452147
+/home/roberto/.m2/repository/org/apache/james/apache-mime4j-core/0.7.2/apache-mime4j-core-0.7.2.jar = 1681839452527
+/home/roberto/.m2/repository/br/com/swconsultoria/java-danfe/1.2/java-danfe-1.2.jar = 1682972648160
+/home/roberto/.m2/repository/net/sf/jasperreports/jasperreports/6.12.0/jasperreports-6.12.0.jar = 1682972657740
+/home/roberto/.m2/repository/commons-beanutils/commons-beanutils/1.9.4/commons-beanutils-1.9.4.jar = 1682535714280
+/home/roberto/.m2/repository/commons-collections/commons-collections/3.2.2/commons-collections-3.2.2.jar = 1682535714776
+/home/roberto/.m2/repository/commons-digester/commons-digester/2.1/commons-digester-2.1.jar = 1682535714884
+/home/roberto/.m2/repository/org/apache/commons/commons-collections4/4.2/commons-collections4-4.2.jar = 1682535715900
+/home/roberto/.m2/repository/org/jfree/jcommon/1.0.23/jcommon-1.0.23.jar = 1682535716036
+/home/roberto/.m2/repository/org/jfree/jfreechart/1.0.19/jfreechart-1.0.19.jar = 1682535724609
+/home/roberto/.m2/repository/org/eclipse/jdt/core/compiler/ecj/4.4.2/ecj-4.4.2.jar = 1682972653976
+/home/roberto/.m2/repository/org/codehaus/castor/castor-xml/1.4.1/castor-xml-1.4.1.jar = 1682535722713
+/home/roberto/.m2/repository/org/codehaus/castor/castor-core/1.4.1/castor-core-1.4.1.jar = 1682535716784
+/home/roberto/.m2/repository/org/apache/commons/commons-lang3/3.4/commons-lang3-3.4.jar = 1682972648552
+/home/roberto/.m2/repository/javax/inject/javax.inject/1/javax.inject-1.jar = 1682535717072
+/home/roberto/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.10.0/jackson-core-2.10.0.jar = 1682972648844
+/home/roberto/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.10.0/jackson-databind-2.10.0.jar = 1682972652500
+/home/roberto/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.10.0/jackson-annotations-2.10.0.jar = 1682972648836
+/home/roberto/.m2/repository/com/lowagie/itext/2.1.7/itext-2.1.7.jar = 1682535709128
+/home/roberto/.m2/repository/bouncycastle/bcmail-jdk14/138/bcmail-jdk14-138.jar = 1682535706964
+/home/roberto/.m2/repository/bouncycastle/bcprov-jdk14/138/bcprov-jdk14-138.jar = 1682535713992
+/home/roberto/.m2/repository/org/bouncycastle/bctsp-jdk14/1.38/bctsp-jdk14-1.38.jar = 1682535707552
+/home/roberto/.m2/repository/org/bouncycastle/bcprov-jdk14/1.38/bcprov-jdk14-1.38.jar = 1682535713600
+/home/roberto/.m2/repository/org/bouncycastle/bcmail-jdk14/1.38/bcmail-jdk14-1.38.jar = 1682535709804
+/home/roberto/.m2/repository/net/sf/jasperreports/jasperreports-fonts/6.12.0/jasperreports-fonts-6.12.0.jar = 1682972654792
+/home/roberto/.m2/repository/commons-io/commons-io/2.8.0/commons-io-2.8.0.jar = 1682972649436
+/home/roberto/.m2/repository/xalan/xalan/2.7.2/xalan-2.7.2.jar = 1682535716548
+/home/roberto/.m2/repository/xalan/serializer/2.7.2/serializer-2.7.2.jar = 1682535705544
+/home/roberto/.m2/repository/xml-apis/xml-apis/1.3.04/xml-apis-1.3.04.jar = 1682972650016
+/home/roberto/.m2/repository/net/sourceforge/barbecue/barbecue/1.5-beta1/barbecue-1.5-beta1.jar = 1682535704436
+/home/roberto/.m2/repository/com/google/zxing/core/3.2.1/core-3.2.1.jar = 1682972651580
+/home/roberto/.m2/repository/com/google/zxing/javase/3.2.1/javase-3.2.1.jar = 1682972651756
+/home/roberto/.m2/repository/com/beust/jcommander/1.48/jcommander-1.48.jar = 1682972651912
+/home/roberto/.m2/repository/org/json/json/20230227/json-20230227.jar = 1682995692415
+/home/roberto/projects/aurora/aurora-nfce/NFCeMonitor/src/main/java = 1682980066531
+/home/roberto/projects/aurora/aurora-nfce/NFCeMonitor/target/apidocs/type-search-index.zip = 1683905256604
+/home/roberto/projects/aurora/aurora-nfce/NFCeMonitor/target/apidocs/package-search-index.zip = 1683905256600
+/home/roberto/projects/aurora/aurora-nfce/NFCeMonitor/target/apidocs/overview-tree.html = 1683905256588
+/home/roberto/projects/aurora/aurora-nfce/NFCeMonitor/target/apidocs/deprecated-list.html = 1683905256620
+/home/roberto/projects/aurora/aurora-nfce/NFCeMonitor/target/apidocs/member-search-index.js = 1683905256604
+/home/roberto/projects/aurora/aurora-nfce/NFCeMonitor/target/apidocs/allclasses.html = 1683905256620
+/home/roberto/projects/aurora/aurora-nfce/NFCeMonitor/target/apidocs/jquery-ui.overrides.css = 1683905256644
+/home/roberto/projects/aurora/aurora-nfce/NFCeMonitor/target/apidocs/member-search-index.zip = 1683905256604
+/home/roberto/projects/aurora/aurora-nfce/NFCeMonitor/target/apidocs/search.js = 1683905256632
+/home/roberto/projects/aurora/aurora-nfce/NFCeMonitor/target/apidocs/constant-values.html = 1683905256572
+/home/roberto/projects/aurora/aurora-nfce/NFCeMonitor/target/apidocs/script.js = 1683905256628
+/home/roberto/projects/aurora/aurora-nfce/NFCeMonitor/target/apidocs/index-all.html = 1683905256604
+/home/roberto/projects/aurora/aurora-nfce/NFCeMonitor/target/apidocs/type-search-index.js = 1683905256600
+/home/roberto/projects/aurora/aurora-nfce/NFCeMonitor/target/apidocs/element-list = 1683905256556
+/home/roberto/projects/aurora/aurora-nfce/NFCeMonitor/target/apidocs/help-doc.html = 1683905256628
+/home/roberto/projects/aurora/aurora-nfce/NFCeMonitor/target/apidocs/stylesheet.css = 1683905256628
+/home/roberto/projects/aurora/aurora-nfce/NFCeMonitor/target/apidocs/allpackages-index.html = 1683905256612
+/home/roberto/projects/aurora/aurora-nfce/NFCeMonitor/target/apidocs/package-search-index.js = 1683905256600
+/home/roberto/projects/aurora/aurora-nfce/NFCeMonitor/target/apidocs/index.html = 1683905256624
+/home/roberto/projects/aurora/aurora-nfce/NFCeMonitor/target/apidocs/allclasses-index.html = 1683905256612
