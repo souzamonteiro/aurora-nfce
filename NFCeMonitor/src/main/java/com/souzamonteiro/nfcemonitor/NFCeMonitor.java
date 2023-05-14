@@ -373,7 +373,8 @@ public class NFCeMonitor {
             JSONObject jsonTotal = jsonInfNFe.getJSONObject("total");
             JSONObject jsonICMSTot = jsonTotal.getJSONObject("ICMSTot");
             JSONObject jsonTransp = jsonInfNFe.getJSONObject("transp");
-            JSONArray jsonPag = jsonInfNFe.getJSONArray("pag");
+            JSONObject jsonPag = jsonInfNFe.getJSONObject("pag");
+            JSONArray jsonDetPag = jsonPag.getJSONArray("detPag");
             
             // Numero da NFC-e.
             String nNF = jsonIde.get("nNF").toString();
@@ -1118,16 +1119,16 @@ public class NFCeMonitor {
             // Preenche dados dos Pagamentos.
             Pag pag = new Pag();
 
-            for(int i = 0; i < jsonPag.length(); i++){
-                JSONObject jsonDetPag = jsonPag.getJSONObject(i);
+            for(int i = 0; i < jsonDetPag.length(); i++){
+                JSONObject jsonItemDetPag = jsonDetPag.getJSONObject(i);
                 Pag.DetPag detPag = new Pag.DetPag();
-                if (jsonDetPag.has("indPag")) {
-                    detPag.setIndPag(jsonDetPag.get("indPag").toString());
+                if (jsonItemDetPag.has("indPag")) {
+                    detPag.setIndPag(jsonItemDetPag.get("indPag").toString());
                 }
-                detPag.setTPag(jsonDetPag.get("tPag").toString());
-                detPag.setVPag(jsonDetPag.get("vPag").toString());
-                if (jsonDetPag.has("card")) {
-                    JSONObject jsonCard = jsonDetPag.getJSONObject("card");
+                detPag.setTPag(jsonItemDetPag.get("tPag").toString());
+                detPag.setVPag(jsonItemDetPag.get("vPag").toString());
+                if (jsonItemDetPag.has("card")) {
+                    JSONObject jsonCard = jsonItemDetPag.getJSONObject("card");
 
                     Pag.DetPag.Card card = new Pag.DetPag.Card();
                     card.setCNPJ(jsonCard.get("CNPJ").toString());
@@ -1138,7 +1139,9 @@ public class NFCeMonitor {
                 }
                 pag.getDetPag().add(detPag);
             }
-
+            if (jsonPag.has("vTroco")) {
+                pag.setVTroco(jsonPag.get("vTroco").toString());
+            }
             infNFe.setPag(pag);
             
             if (jsonInfNFe.has("infAdic")) {
