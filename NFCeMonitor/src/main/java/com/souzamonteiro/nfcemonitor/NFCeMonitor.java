@@ -524,7 +524,12 @@ public class NFCeMonitor {
                 JSONObject jsonAutXML = jsonInfNFe.getJSONObject("autXML");
 
                 AutXML autXML = new AutXML();
-                autXML.setCNPJ(jsonAutXML.get("CNPJ").toString());
+                if (jsonAutXML.has("CPF")) {
+                    autXML.setCPF(jsonAutXML.get("CPF").toString());
+                }
+                if (jsonAutXML.has("CNPJ")) {
+                    autXML.setCNPJ(jsonAutXML.get("CNPJ").toString());
+                }
                 infNFe.getAutXML().add(autXML);
             }
             
