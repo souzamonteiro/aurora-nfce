@@ -600,11 +600,7 @@ public class NFCeMonitor {
                 if (jsonICMS.has("ICMSSN900")) {
                     jsonICMSSN900 = jsonICMS.getJSONObject("ICMSSN900");
                 }
-                JSONObject jsonPIS = jsonImposto.getJSONObject("PIS");
-                JSONObject jsonPISAliq = jsonPIS.getJSONObject("PISAliq");
-                JSONObject jsonCOFINS = jsonImposto.getJSONObject("COFINS");
-                JSONObject jsonCOFINSAliq = jsonCOFINS.getJSONObject("COFINSAliq");
-
+                
                 int n = i + 1;
 
                 Det det = new Det();
@@ -1047,31 +1043,41 @@ public class NFCeMonitor {
                     icms.setICMSSN900(icmsSN900);
                 }
                 
-                PIS pis = new PIS();
-                PISAliq pisAliq = new PISAliq();
-                pisAliq.setCST(jsonPISAliq.get("CST").toString());
-                pisAliq.setVBC(jsonPISAliq.get("vBC").toString());
-                pisAliq.setPPIS(jsonPISAliq.get("pPIS").toString());
-                pisAliq.setVPIS(jsonPISAliq.get("vPIS").toString());
-                pis.setPISAliq(pisAliq);
-
-                COFINS cofins = new COFINS();
-                COFINSAliq cofinsAliq = new COFINSAliq();
-                cofinsAliq.setCST(jsonCOFINSAliq.get("CST").toString());
-                cofinsAliq.setVBC(jsonCOFINSAliq.get("vBC").toString());
-                cofinsAliq.setPCOFINS(jsonCOFINSAliq.get("pCOFINS").toString());
-                cofinsAliq.setVCOFINS(jsonCOFINSAliq.get("vCOFINS").toString());
-                cofins.setCOFINSAliq(cofinsAliq);
-
                 JAXBElement<ICMS> icmsElement = new JAXBElement<ICMS>(new QName("ICMS"), ICMS.class, icms);
                 imposto.getContent().add(icmsElement);
 
-                JAXBElement<PIS> pisElement = new JAXBElement<PIS>(new QName("PIS"), PIS.class, pis);
-                imposto.getContent().add(pisElement);
+                if (jsonImposto.has("PIS")) {
+                    JSONObject jsonPIS = jsonImposto.getJSONObject("PIS");
+                    JSONObject jsonPISAliq = jsonPIS.getJSONObject("PISAliq");
 
-                JAXBElement<COFINS> cofinsElement = new JAXBElement<COFINS>(new QName("COFINS"), COFINS.class, cofins);
-                imposto.getContent().add(cofinsElement);
+                    PIS pis = new PIS();
+                    PISAliq pisAliq = new PISAliq();
+                    pisAliq.setCST(jsonPISAliq.get("CST").toString());
+                    pisAliq.setVBC(jsonPISAliq.get("vBC").toString());
+                    pisAliq.setPPIS(jsonPISAliq.get("pPIS").toString());
+                    pisAliq.setVPIS(jsonPISAliq.get("vPIS").toString());
+                    pis.setPISAliq(pisAliq);
+                    
+                    JAXBElement<PIS> pisElement = new JAXBElement<PIS>(new QName("PIS"), PIS.class, pis);
+                    imposto.getContent().add(pisElement);
+                }
+                
+                if (jsonImposto.has("COFINS")) {
+                    JSONObject jsonCOFINS = jsonImposto.getJSONObject("COFINS");
+                    JSONObject jsonCOFINSAliq = jsonCOFINS.getJSONObject("COFINSAliq");
 
+                    COFINS cofins = new COFINS();
+                    COFINSAliq cofinsAliq = new COFINSAliq();
+                    cofinsAliq.setCST(jsonCOFINSAliq.get("CST").toString());
+                    cofinsAliq.setVBC(jsonCOFINSAliq.get("vBC").toString());
+                    cofinsAliq.setPCOFINS(jsonCOFINSAliq.get("pCOFINS").toString());
+                    cofinsAliq.setVCOFINS(jsonCOFINSAliq.get("vCOFINS").toString());
+                    cofins.setCOFINSAliq(cofinsAliq);
+                    
+                    JAXBElement<COFINS> cofinsElement = new JAXBElement<COFINS>(new QName("COFINS"), COFINS.class, cofins);
+                    imposto.getContent().add(cofinsElement);
+                }
+                
                 det.setImposto(imposto);
 
                 infNFe.getDet().addAll(Collections.singletonList(det));
