@@ -43,6 +43,10 @@ import br.com.swconsultoria.nfe.schema_4.retConsSitNFe.TRetConsSitNFe;
 import br.com.swconsultoria.nfe.schema_4.retConsStatServ.TRetConsStatServ;
 import br.com.swconsultoria.nfe.util.*;
 
+import br.com.swconsultoria.impressao.model.Impressao;
+import br.com.swconsultoria.impressao.service.ImpressaoService;
+import br.com.swconsultoria.impressao.util.ImpressaoUtil;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
@@ -64,6 +68,8 @@ import javax.xml.namespace.QName;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+
+import net.sf.jasperreports.view.JasperViewer;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -298,6 +304,14 @@ public class NFCeMonitor {
             if (configuracoes.has("simularContingencia")) {
                 simularContingencia = configuracoes.get("simularContingencia").toString();
             }
+            String salvarDANFE = "0";
+            if (configuracoes.has("salvarDANFE")) {
+                salvarDANFE = configuracoes.get("salvarDANFE").toString();
+            }
+            String imprimirDANFE = "0";
+            if (configuracoes.has("imprimirDANFE")) {
+                imprimirDANFE = configuracoes.get("imprimirDANFE").toString();
+            }
             
             InputStream inputStream = httpExchange.getRequestBody(); 
             Scanner scanner = new Scanner(inputStream);
@@ -315,6 +329,7 @@ public class NFCeMonitor {
             String xMotivo = "";
             String dhRecbto = "";
             String nProt = "";
+            String tpAmb = "";
             String tpEmis = "";
             String dhCont = "";
             String xJust = "";
@@ -343,6 +358,7 @@ public class NFCeMonitor {
                 responseJSON.put("xMotivo", xMotivo);
                 responseJSON.put("dhRecbto", dhRecbto);
                 responseJSON.put("nProt", nProt);
+                responseJSON.put("tpAmb", tpAmb);
                 responseJSON.put("tpEmis", tpEmis);
                 responseJSON.put("dhCont", dhCont);
                 responseJSON.put("xJust", xJust);
@@ -396,9 +412,12 @@ public class NFCeMonitor {
             String modelo = DocumentoEnum.NFCE.getModelo();
             // Série da NFC-e.
             int serie = Integer.parseInt(jsonIde.get("serie").toString());
+            
+            // Tipo de ambiente do serviço NF-e.
+            tpAmb = config.getAmbiente().getCodigo();
             // Tipo de emissao da NFC-e.
             tpEmis = jsonIde.get("tpEmis").toString();
-
+            
             // Id do token de emissão da NFC-e..
             String idToken = configuracoes.get("idToken").toString();
             // CSC da NFC-e.
@@ -429,7 +448,7 @@ public class NFCeMonitor {
             ide.setTpImp(jsonIde.get("tpImp").toString());
             ide.setTpEmis(tpEmis);
             ide.setCDV(cdv);
-            ide.setTpAmb(config.getAmbiente().getCodigo());
+            ide.setTpAmb(tpAmb);
             ide.setFinNFe(jsonIde.get("finNFe").toString());
             ide.setIndFinal(jsonIde.get("indFinal").toString());
             ide.setIndPres(jsonIde.get("indPres").toString());
@@ -1196,6 +1215,7 @@ public class NFCeMonitor {
                 if (simularContingencia.equals("1")) {
                     dhRecbto = "";
                     nProt = "";
+                    tpAmb = "";
                     tpEmis = "";
                     dhCont = "";
                     xJust = "";
@@ -1243,7 +1263,13 @@ public class NFCeMonitor {
                         // Salva o XML da NFC-e.
                         FileWriter writer = new FileWriter(caminhoXML + "/" + chave + ".xml");
                         writer.write(xml);
-                        writer.close();      
+                        writer.close();
+                        
+                        // Salva o DANFE da NFC-e em PDF.
+                        if (salvarDANFE.equals("1")) {
+                            Impressao impressao = ImpressaoUtil.impressaoPadraoNFCe(xml, urlChave);
+                            ImpressaoService.impressaoPdfArquivo(impressao, caminhoXML + "/" + chave + ".pdf");
+                        }
                         
                         System.out.println("Protocolo: " + nProt);
                         System.out.println("XML Final: " + xml);
@@ -1264,8 +1290,14 @@ public class NFCeMonitor {
                         // Salva o XML da NFC-e.
                         FileWriter writer = new FileWriter(caminhoXML + "/" + chave + ".xml");
                         writer.write(xml);
-                        writer.close();      
-                       
+                        writer.close();
+                        
+                        // Salva o DANFE da NFC-e em PDF.
+                        if (salvarDANFE.equals("1")) {
+                            Impressao impressao = ImpressaoUtil.impressaoPadraoNFCe(xml, urlChave);
+                            ImpressaoService.impressaoPdfArquivo(impressao, caminhoXML + "/" + chave + ".pdf");
+                        }
+                        
                         System.out.println("Protocolo: " + nProt);
                         System.out.println("XML Final: " + xml);
                     }
@@ -1275,6 +1307,7 @@ public class NFCeMonitor {
                 if (simularContingencia.equals("2")) {
                     dhRecbto = "";
                     nProt = "";
+                    tpAmb = "";
                     tpEmis = "";
                     dhCont = "";
                     xJust = "";
@@ -1297,6 +1330,7 @@ public class NFCeMonitor {
                 // Se o erro não ocorreu por rejeição, cria o XML da NF-e em contingência.
                 if (cStat.equals("000")) {
                     // Tipo da emissão contingência: tpEmis = "9".
+                    tpAmb = config.getAmbiente().getCodigo();
                     tpEmis = "9";
                     chaveUtil = new ChaveUtil(config.getEstado(), cnpj, modelo, serie, numeroNFCe, tpEmis, cnf, dataEmissao);
                     chave = chaveUtil.getChaveNF();
@@ -1328,6 +1362,17 @@ public class NFCeMonitor {
                         FileWriter writer = new FileWriter(caminhoXML + "/" + chave + ".xml");
                         writer.write(xml);
                         writer.close();
+                        
+                        TNfeProc nfeProc = new TNfeProc();
+                        nfeProc.setVersao("4.00");
+                        nfeProc.setNFe(enviNFeContingencia.getNFe().get(0));
+                        String xmlContingencia = XmlNfeUtil.objectToXml(nfeProc);
+                        
+                        // Salva o DANFE da NFC-e em PDF.
+                        if (salvarDANFE.equals("1")) {
+                            Impressao impressao = ImpressaoUtil.impressaoPadraoNFCe(xmlContingencia, urlChave);
+                            ImpressaoService.impressaoPdfArquivo(impressao, caminhoXML + "/" + chave + ".pdf");
+                        }
                     } catch (Exception error) {
                         System.out.println(error.getMessage());
 
@@ -1337,6 +1382,7 @@ public class NFCeMonitor {
                 } else {
                     dhRecbto = "";
                     nProt = "";
+                    tpAmb = "";
                     tpEmis = "";
                     dhCont = "";
                     xJust = "";
@@ -1352,6 +1398,7 @@ public class NFCeMonitor {
             responseJSON.put("xMotivo", xMotivo);
             responseJSON.put("dhRecbto", dhRecbto);
             responseJSON.put("nProt", nProt);
+            responseJSON.put("tpAmb", tpAmb);
             responseJSON.put("tpEmis", tpEmis);
             responseJSON.put("dhCont", dhCont);
             responseJSON.put("xJust", xJust);
