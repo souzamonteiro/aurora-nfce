@@ -65,8 +65,6 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
-import net.sf.jasperreports.view.JasperViewer;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -297,16 +295,20 @@ public class NFCeMonitor {
             String webserviceAmbiente = configuracoes.get("webserviceAmbiente").toString();
             String caminhoXML = configuracoes.get("caminhoXML").toString();
             String simularContingencia = "0";
-            if (configuracoes.has("simularContingencia")) {
-                simularContingencia = configuracoes.get("simularContingencia").toString();
-            }
-            String salvarDANFE = "0";
-            if (configuracoes.has("salvarDANFE")) {
-                salvarDANFE = configuracoes.get("salvarDANFE").toString();
-            }
             String imprimirDANFE = "0";
+            String nomeImpressora = "";
+            String tamanhoPapel = "58";
             if (configuracoes.has("imprimirDANFE")) {
                 imprimirDANFE = configuracoes.get("imprimirDANFE").toString();
+            }
+            if (configuracoes.has("nomeImpressora")) {
+                nomeImpressora = configuracoes.get("nomeImpressora").toString();
+            }
+            if (configuracoes.has("tamanhoPapel")) {
+                tamanhoPapel = configuracoes.get("tamanhoPapel").toString();
+            }
+            if (configuracoes.has("simularContingencia")) {
+                simularContingencia = configuracoes.get("simularContingencia").toString();
             }
             
             InputStream inputStream = httpExchange.getRequestBody(); 

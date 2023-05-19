@@ -9,7 +9,8 @@
     "caminhoCertificado": "/home/roberto/certificados/33630582000149.pfx",
     "senhaCertificado": "1234",
     "caminhoXML": "/home/roberto/xml",
-    "salvarDANFE": "1",
     "imprimirDANFE": "1",
+    "nomeImpressora": "MiniThermalPrinter",
+    "tamanhoPapel": "58",
     "simularContingencia": "0"
 }
