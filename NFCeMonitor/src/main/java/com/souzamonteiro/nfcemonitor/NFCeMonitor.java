@@ -58,6 +58,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
+import javax.print.PrintService;
 import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
 
@@ -67,6 +68,12 @@ import com.sun.net.httpserver.HttpServer;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import com.github.anastaciocintra.escpos.barcode.QRCode;
+import com.github.anastaciocintra.escpos.EscPos;
+import com.github.anastaciocintra.escpos.EscPosConst;
+import com.github.anastaciocintra.escpos.EscPos.CharacterCodeTable;
+import com.github.anastaciocintra.output.PrinterOutputStream;
 
 /**
  * Emissor de NFC-e.
