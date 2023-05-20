@@ -184,6 +184,66 @@ public class NFCeMonitor {
     }
     
     /**
+     * Imprime o DANFE em uma impressora ESC/POS.
+     * 
+     * @param   json            Dados da NF-e.
+     * @param   nomeImpressora  Nome da impressora ESC/POS.
+     * @param   tamanhoPapel    Tamanho do papel (58mm ou 80mm).
+     * @return           Map contendo os parâmetros passados na URL.
+     */
+    private static int imprimeDANFE(JSONObject json, String nomeImpressora, String tamanhoPapel) {
+        JSONObject jsonInfNFe = json.getJSONObject("infNFe");
+        JSONObject jsonIde = jsonInfNFe.getJSONObject("ide");
+        JSONObject jsonEmit = jsonInfNFe.getJSONObject("emit");
+        JSONObject jsonEnderEmit = jsonEmit.getJSONObject("enderEmit");
+        JSONObject jsonDest = jsonInfNFe.getJSONObject("dest");
+        JSONArray jsonDet = jsonInfNFe.getJSONArray("det");
+        JSONObject jsonTotal = jsonInfNFe.getJSONObject("total");
+        JSONObject jsonPag = jsonInfNFe.getJSONObject("pag");
+        JSONArray jsonDetPag = jsonPag.getJSONArray("detPag");
+        JSONObject jsonInfProt = json.getJSONObject("infProt");
+        
+        String serie = jsonIde.get("serie").toString();
+        String nNF = jsonIde.get("nNF").toString();
+        String dhEmi = jsonIde.get("dhEmi").toString();
+        
+        String emitCNPJ = jsonEmit.get("CNPJ").toString();
+        String emitXNome = jsonEmit.get("xNome").toString();
+        String emitXLgr = jsonEmit.get("xLgr").toString();
+        String emitNro = jsonEmit.get("nro").toString();
+        String emitXCpl = jsonEmit.get("xCpl").toString();
+        String emitXBairro = jsonEmit.get("xBairro").toString();
+        String emitXMun = jsonEmit.get("xMun").toString();
+        String emitUF = jsonEmit.get("UF").toString();
+        String emitCEP = jsonEmit.get("CEP").toString();
+        String emitXPais = jsonEmit.get("xPais").toString();
+        
+        if (jsonDest.has("CPF")) {
+            String destCNPJ = jsonDest.get("CPF").toString();
+        } else if (jsonDest.has("CNPJ")) {
+            String destCNPJ = jsonDest.get("CNPJ").toString();
+        } else {
+            String destCNPJ = "";
+        }
+        
+        if (jsonDest.has("xNome")) {
+            String destXNome = jsonDest.get("xNome").toString();
+        } else {
+            String destXNome = "";
+        }
+        
+        String tpAmb = jsonIde.get("tpAmb").toString();
+        String tpEmis = jsonIde.get("tpEmis").toString();
+        String chNFe = jsonIde.get("chNFe").toString();
+        String dhRecbto = jsonIde.get("dhRecbto").toString();
+        String nProt = jsonIde.get("nProt").toString();
+        String urlChave = jsonIde.get("urlChave").toString();
+        String qrCode = jsonIde.get("qrCode").toString();
+        
+        return 1;
+    }
+    
+    /**
      * Processa o serviço NFeStatusServico.
      */
     static class NFeStatusServicoHandler implements HttpHandler {
@@ -1270,6 +1330,23 @@ public class NFCeMonitor {
                         writer.write(xml);
                         writer.close();
                         
+                        // Imprime a NF-e.
+                        if (imprimirDANFE.equals("1")) {
+                            JSONObject jsonInfProt = new JSONObject();
+                            jsonInfProt.put("tpAmb", tpAmb);
+                            jsonInfProt.put("tpEmis", tpEmis);
+                            jsonInfProt.put("chNFe", chave.substring(3));
+                            jsonInfProt.put("dhRecbto", dhRecbto);
+                            jsonInfProt.put("nProt", nProt);
+                            jsonInfProt.put("urlChave", urlChave);
+                            jsonInfProt.put("qrCode", qrCode);
+                            jsonInfProt.put("cStat", cStat);
+                            jsonInfProt.put("xMotivo", xMotivo);
+                            json.put("infProt", jsonInfProt);
+                            
+                            imprimeDANFE(json, nomeImpressora, tamanhoPapel);
+                        }
+                        
                         System.out.println("Protocolo: " + nProt);
                         System.out.println("XML Final: " + xml);
                     }
@@ -1290,6 +1367,23 @@ public class NFCeMonitor {
                         FileWriter writer = new FileWriter(caminhoXML + "/" + chave + ".xml");
                         writer.write(xml);
                         writer.close();
+                        
+                        // Imprime a NF-e.
+                        if (imprimirDANFE.equals("1")) {
+                            JSONObject jsonInfProt = new JSONObject();
+                            jsonInfProt.put("tpAmb", tpAmb);
+                            jsonInfProt.put("tpEmis", tpEmis);
+                            jsonInfProt.put("chNFe", chave.substring(3));
+                            jsonInfProt.put("dhRecbto", dhRecbto);
+                            jsonInfProt.put("nProt", nProt);
+                            jsonInfProt.put("urlChave", urlChave);
+                            jsonInfProt.put("qrCode", qrCode);
+                            jsonInfProt.put("cStat", cStat);
+                            jsonInfProt.put("xMotivo", xMotivo);
+                            json.put("infProt", jsonInfProt);
+                            
+                            imprimeDANFE(json, nomeImpressora, tamanhoPapel);
+                        }
                         
                         System.out.println("Protocolo: " + nProt);
                         System.out.println("XML Final: " + xml);
@@ -1355,6 +1449,23 @@ public class NFCeMonitor {
                         FileWriter writer = new FileWriter(caminhoXML + "/" + chave + ".xml");
                         writer.write(xml);
                         writer.close();
+                        
+                        // Imprime a NF-e.
+                        if (imprimirDANFE.equals("1")) {
+                            JSONObject jsonInfProt = new JSONObject();
+                            jsonInfProt.put("tpAmb", tpAmb);
+                            jsonInfProt.put("tpEmis", tpEmis);
+                            jsonInfProt.put("chNFe", chave.substring(3));
+                            jsonInfProt.put("dhRecbto", dhRecbto);
+                            jsonInfProt.put("nProt", nProt);
+                            jsonInfProt.put("urlChave", urlChave);
+                            jsonInfProt.put("qrCode", qrCode);
+                            jsonInfProt.put("cStat", cStat);
+                            jsonInfProt.put("xMotivo", xMotivo);
+                            json.put("infProt", jsonInfProt);
+                            
+                            imprimeDANFE(json, nomeImpressora, tamanhoPapel);
+                        }
                     } catch (Exception error) {
                         System.out.println(error.getMessage());
 

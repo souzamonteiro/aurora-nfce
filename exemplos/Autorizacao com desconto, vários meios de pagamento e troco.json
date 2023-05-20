@@ -1,0 +1,250 @@
+{
+    "infNFe": {
+        "ide": {
+            "cUF": "13",
+            "cNF": "321",
+            "natOp": "NOTA FISCAL CONSUMIDOR ELETRONICA",
+            "mod": "65",
+            "serie": "1",
+            "nNF": "320",
+            "dhEmi": "2023-05-20 16:44:19",
+            "tpNF": "1",
+            "idDest": "1",
+            "cMunFG": "2927408",
+            "tpImp": "4",
+            "tpAmb": "2",
+            "tpEmis": "1",
+            "finNFe": "1",
+            "indFinal": "1",
+            "indPres": "1",
+            "procEmi": "0",
+            "verProc": "1.0"
+        },
+        "emit": {
+            "CNPJ": "33630582000149",
+            "xNome": "Editora Roberto Luiz Souza Monteiro",
+            "IE": "158039716",
+            "CRT": "1",
+            "enderEmit": {
+                "xLgr": "Rua Chile",
+                "nro": "s/n",
+                "xCpl": "Edifício Eduardo De Moraes, sala 606",
+                "xBairro": "Centro",
+                "cMun": "2927408",
+                "xMun": "Salvador",
+                "UF": "BA",
+                "CEP": "40020000",
+                "cPais": "1058",
+                "xPais": "Brasil",
+                "fone": "71997721874"
+            }
+        },
+        "dest": {
+            "CPF": "40325635862",
+            "xNome": "Andréia Rita da Silva",
+            "enderDest": {
+                "xLgr": "Rua Tanhaçu",
+                "nro": "11",
+                "xCpl": "Quadra 5",
+                "xBairro": "Ipitanga",
+                "cMun": "2919207",
+                "xMun": "Lauro de Freitas",
+                "UF": "BA",
+                "CEP": "42706730",
+                "cPais": "1058",
+                "xPais": "Brasil",
+                "fone": "071991965292"
+            }
+        },
+        "autXML": {
+            "CNPJ": "13937073000156"
+        },
+        "det": [{
+            "prod": {
+                "cProd": "1",
+                "cEAN": "7893946378271",
+                "xProd": "Banqueta plástica dobrável, branca, altura 220 mm",
+                "NCM": "94018000",
+                "CEST": "0108500",
+                "indEscala": "S",
+                "CFOP": "5102",
+                "uCom": "PC",
+                "qCom": "1",
+                "vUnCom": "56.08",
+                "vProd": "56.08",
+                "cEANTrib": "7893946378271",
+                "uTrib": "PC",
+                "qTrib": "1",
+                "vUnTrib": "56.08",
+                "indTot": "1"
+            },
+            "imposto": {
+                "ICMS": {
+                    "ICMS20": {
+                        "orig": "2",
+                        "CST": "20",
+                        "modBC": "3",
+                        "pRedBC": "41.1760",
+                        "vBC": "32.99",
+                        "pICMS": "18.00",
+                        "vICMS": "5.94"
+                    }
+                },
+                "PIS": {
+                    "PISAliq": {
+                        "CST": "01",
+                        "vBC": "56.08",
+                        "pPIS": "1.65",
+                        "vPIS": "0.93"
+                    }
+                },
+                "COFINS": {
+                    "COFINSAliq": {
+                        "CST": "01",
+                        "vBC": "56.08",
+                        "pCOFINS": "7.60",
+                        "vCOFINS": "4.26"
+                    }
+                }
+            }
+        }, {
+            "prod": {
+                "cProd": "2",
+                "cEAN": "7893946169442",
+                "xProd": "Jogo de cinta com catraca para amarração de carga 0,8 tf/0,4 tf, CC 080",
+                "NCM": "56079090",
+                "CEST": "2804000",
+                "indEscala": "S",
+                "CFOP": "5102",
+                "uCom": "PC",
+                "qCom": "2",
+                "vUnCom": "37.82",
+                "vProd": "75.64",
+                "cEANTrib": "7893946169442",
+                "uTrib": "PC",
+                "qTrib": "2",
+                "vUnTrib": "37.82",
+                "indTot": "1"
+            },
+            "imposto": {
+                "ICMS": {
+                    "ICMS20": {
+                        "orig": "2",
+                        "CST": "20",
+                        "modBC": "3",
+                        "pRedBC": "41.1760",
+                        "vBC": "44.49",
+                        "pICMS": "18.00",
+                        "vICMS": "8.01"
+                    }
+                },
+                "PIS": {
+                    "PISAliq": {
+                        "CST": "01",
+                        "vBC": "75.64",
+                        "pPIS": "1.65",
+                        "vPIS": "1.25"
+                    }
+                },
+                "COFINS": {
+                    "COFINSAliq": {
+                        "CST": "01",
+                        "vBC": "75.64",
+                        "pCOFINS": "7.60",
+                        "vCOFINS": "5.75"
+                    }
+                }
+            }
+        }, {
+            "prod": {
+                "cProd": "3",
+                "cEAN": "7898480650104",
+                "xProd": "Óleo de cambio manual SAE 80W Flex Oil 1Lt",
+                "NCM": "27101932",
+                "CEST": "0600500",
+                "indEscala": "S",
+                "CFOP": "5102",
+                "uCom": "UN",
+                "qCom": "1",
+                "vUnCom": "13.00",
+                "vProd": "13.00",
+                "cEANTrib": "7898480650104",
+                "uTrib": "UN",
+                "qTrib": "1",
+                "vUnTrib": "13.00",
+                "vDesc": "1.30",
+                "indTot": "1"
+            },
+            "imposto": {
+                "ICMS": {
+                    "ICMS00": {
+                        "orig": "0",
+                        "CST": "00",
+                        "modBC": "3",
+                        "vBC": "13.00",
+                        "pICMS": "7.00",
+                        "vICMS": "0.91"
+                    }
+                },
+                "PIS": {
+                    "PISAliq": {
+                        "CST": "01",
+                        "vBC": "13.00",
+                        "pPIS": "1.65",
+                        "vPIS": "0.21"
+                    }
+                },
+                "COFINS": {
+                    "COFINSAliq": {
+                        "CST": "01",
+                        "vBC": "13.00",
+                        "pCOFINS": "7.60",
+                        "vCOFINS": "0.99"
+                    }
+                }
+            }
+        }],
+        "total": {
+            "ICMSTot": {
+                "vBC": "90.48",
+                "vICMS": "14.86",
+                "vICMSDeson": "0.00",
+                "vFCP": "0.00",
+                "vBCST": "0.00",
+                "vST": "0.00",
+                "vFCPST": "0.00",
+                "vFCPSTRet": "0.00",
+                "vProd": "144.72",
+                "vFrete": "0.00",
+                "vSeg": "0.00",
+                "vDesc": "1.30",
+                "vII": "0.00",
+                "vIPI": "0.00",
+                "vIPIDevol": "0.00",
+                "vPIS": "2.39",
+                "vCOFINS": "11.00",
+                "vOutro": "0.00",
+                "vNF": "143.42"
+            }
+        },
+        "transp": {
+            "modFrete": "9"
+        },
+        "pag": {
+            "detPag": [{
+                "tPag": "01",
+                "vPag": "50.00"
+            }, {
+                "tPag": "03",
+                "vPag": "40.00"
+            }, {
+                "tPag": "04",
+                "vPag": "100.00"
+            }],
+            "vTroco": "46.58"
+        },
+        "infAdic": {
+            "infCpl": "Tributos Totais Incidentes (Lei Federal 12.741/2012): R$73,27. Trib aprox R$: 46,68 Fed, 26,59 Est e 0,00 Mun. Fonte: IBPT. "
+        }
+    }
+}
