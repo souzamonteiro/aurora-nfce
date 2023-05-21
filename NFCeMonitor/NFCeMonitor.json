@@ -12,5 +12,6 @@
     "imprimirDANFE": "1",
     "nomeImpressora": "MiniThermalPrinter",
     "tamanhoPapel": "58",
+    "habilitarServicoImpressao": "1",
     "simularContingencia": "0"
 }

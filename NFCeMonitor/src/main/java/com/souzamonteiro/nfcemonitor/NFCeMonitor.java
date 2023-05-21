@@ -1344,7 +1344,8 @@ public class NFCeMonitor {
                             jsonInfProt.put("xMotivo", xMotivo);
                             json.put("infProt", jsonInfProt);
                             
-                            imprimeDANFE(json, nomeImpressora, tamanhoPapel);
+                            //imprimeDANFE(json, nomeImpressora, tamanhoPapel);
+                            System.out.println(json.toString());
                         }
                         
                         System.out.println("Protocolo: " + nProt);
@@ -1382,7 +1383,8 @@ public class NFCeMonitor {
                             jsonInfProt.put("xMotivo", xMotivo);
                             json.put("infProt", jsonInfProt);
                             
-                            imprimeDANFE(json, nomeImpressora, tamanhoPapel);
+                            //imprimeDANFE(json, nomeImpressora, tamanhoPapel);
+                            System.out.println(json.toString());
                         }
                         
                         System.out.println("Protocolo: " + nProt);
@@ -1464,7 +1466,8 @@ public class NFCeMonitor {
                             jsonInfProt.put("xMotivo", xMotivo);
                             json.put("infProt", jsonInfProt);
                             
-                            imprimeDANFE(json, nomeImpressora, tamanhoPapel);
+                            //imprimeDANFE(json, nomeImpressora, tamanhoPapel);
+                            System.out.println(json.toString());
                         }
                     } catch (Exception error) {
                         System.out.println(error.getMessage());
