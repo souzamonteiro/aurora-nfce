@@ -1,0 +1,261 @@
+{
+    "infNFe": {
+        "infAdic": {
+            "infCpl": "Tributos Totais Incidentes (Lei Federal 12.741/2012): R$73,27. Trib aprox R$: 46,68 Fed, 26,59 Est e 0,00 Mun. Fonte: IBPT. "
+        },
+        "det": [{
+            "prod": {
+                "cEAN": "7893946378271",
+                "cProd": "1",
+                "indEscala": "S",
+                "qCom": "1",
+                "cEANTrib": "7893946378271",
+                "vUnTrib": "56.08",
+                "qTrib": "1",
+                "vProd": "56.08",
+                "xProd": "Banqueta plástica dobrável, branca, altura 220 mm",
+                "vUnCom": "56.08",
+                "indTot": "1",
+                "uTrib": "PC",
+                "NCM": "94018000",
+                "uCom": "PC",
+                "CFOP": "5102",
+                "CEST": "0108500"
+            },
+            "imposto": {
+                "ICMS": {
+                    "ICMS20": {
+                        "modBC": "3",
+                        "pRedBC": "41.1760",
+                        "orig": "2",
+                        "CST": "20",
+                        "vBC": "32.99",
+                        "vICMS": "5.94",
+                        "pICMS": "18.00"
+                    }
+                },
+                "COFINS": {
+                    "COFINSAliq": {
+                        "vCOFINS": "4.26",
+                        "CST": "01",
+                        "vBC": "56.08",
+                        "pCOFINS": "7.60"
+                    }
+                },
+                "PIS": {
+                    "PISAliq": {
+                        "vPIS": "0.93",
+                        "CST": "01",
+                        "vBC": "56.08",
+                        "pPIS": "1.65"
+                    }
+                }
+            }
+        }, {
+            "prod": {
+                "cEAN": "7893946169442",
+                "cProd": "2",
+                "indEscala": "S",
+                "qCom": "2",
+                "cEANTrib": "7893946169442",
+                "vUnTrib": "37.82",
+                "qTrib": "2",
+                "vProd": "75.64",
+                "xProd": "Jogo de cinta com catraca para amarração de carga 0,8 tf/0,4 tf, CC 080",
+                "vUnCom": "37.82",
+                "indTot": "1",
+                "uTrib": "PC",
+                "NCM": "56079090",
+                "uCom": "PC",
+                "CFOP": "5102",
+                "CEST": "2804000"
+            },
+            "imposto": {
+                "ICMS": {
+                    "ICMS20": {
+                        "modBC": "3",
+                        "pRedBC": "41.1760",
+                        "orig": "2",
+                        "CST": "20",
+                        "vBC": "44.49",
+                        "vICMS": "8.01",
+                        "pICMS": "18.00"
+                    }
+                },
+                "COFINS": {
+                    "COFINSAliq": {
+                        "vCOFINS": "5.75",
+                        "CST": "01",
+                        "vBC": "75.64",
+                        "pCOFINS": "7.60"
+                    }
+                },
+                "PIS": {
+                    "PISAliq": {
+                        "vPIS": "1.25",
+                        "CST": "01",
+                        "vBC": "75.64",
+                        "pPIS": "1.65"
+                    }
+                }
+            }
+        }, {
+            "prod": {
+                "cEAN": "7898480650104",
+                "cProd": "3",
+                "indEscala": "S",
+                "qCom": "1",
+                "cEANTrib": "7898480650104",
+                "vUnTrib": "13.00",
+                "qTrib": "1",
+                "vProd": "13.00",
+                "xProd": "Óleo de cambio manual SAE 80W Flex Oil 1Lt",
+                "vUnCom": "13.00",
+                "indTot": "1",
+                "uTrib": "UN",
+                "vDesc": "1.30",
+                "NCM": "27101932",
+                "uCom": "UN",
+                "CFOP": "5102",
+                "CEST": "0600500"
+            },
+            "imposto": {
+                "ICMS": {
+                    "ICMS00": {
+                        "modBC": "3",
+                        "orig": "0",
+                        "CST": "00",
+                        "vBC": "13.00",
+                        "vICMS": "0.91",
+                        "pICMS": "7.00"
+                    }
+                },
+                "COFINS": {
+                    "COFINSAliq": {
+                        "vCOFINS": "0.99",
+                        "CST": "01",
+                        "vBC": "13.00",
+                        "pCOFINS": "7.60"
+                    }
+                },
+                "PIS": {
+                    "PISAliq": {
+                        "vPIS": "0.21",
+                        "CST": "01",
+                        "vBC": "13.00",
+                        "pPIS": "1.65"
+                    }
+                }
+            }
+        }],
+        "total": {
+            "ICMSTot": {
+                "vCOFINS": "11.00",
+                "vBCST": "0.00",
+                "vICMSDeson": "0.00",
+                "vProd": "144.72",
+                "vSeg": "0.00",
+                "vFCP": "0.00",
+                "vFCPST": "0.00",
+                "vNF": "143.42",
+                "vPIS": "2.39",
+                "vIPIDevol": "0.00",
+                "vBC": "90.48",
+                "vST": "0.00",
+                "vICMS": "14.86",
+                "vII": "0.00",
+                "vFCPSTRet": "0.00",
+                "vDesc": "1.30",
+                "vOutro": "0.00",
+                "vIPI": "0.00",
+                "vFrete": "0.00"
+            }
+        },
+        "pag": {
+            "vTroco": "46.58",
+            "detPag": [{
+                "vPag": "50.00",
+                "tPag": "01"
+            }, {
+                "vPag": "40.00",
+                "tPag": "03"
+            }, {
+                "vPag": "100.00",
+                "tPag": "04"
+            }]
+        },
+        "ide": {
+            "tpNF": "1",
+            "mod": "65",
+            "indPres": "1",
+            "tpImp": "4",
+            "nNF": "326",
+            "cMunFG": "2927408",
+            "procEmi": "0",
+            "finNFe": "1",
+            "dhEmi": "2023-05-22 09:22:09",
+            "tpAmb": "2",
+            "indFinal": "1",
+            "idDest": "1",
+            "tpEmis": "1",
+            "cUF": "13",
+            "serie": "1",
+            "natOp": "NOTA FISCAL CONSUMIDOR ELETRONICA",
+            "cNF": "327",
+            "verProc": "1.0"
+        },
+        "autXML": {
+            "CNPJ": "13937073000156"
+        },
+        "emit": {
+            "xNome": "Editora Roberto Luiz Souza Monteiro",
+            "CRT": "1",
+            "CNPJ": "33630582000149",
+            "enderEmit": {
+                "xCpl": "Edifício Eduardo De Moraes, sala 606",
+                "fone": "71997721874",
+                "UF": "BA",
+                "xPais": "Brasil",
+                "cPais": "1058",
+                "xLgr": "Rua Chile",
+                "xMun": "Salvador",
+                "nro": "s/n",
+                "cMun": "2927408",
+                "xBairro": "Centro",
+                "CEP": "40020000"
+            },
+            "IE": "158039716"
+        },
+        "dest": {
+            "xNome": "Andréia Rita da Silva",
+            "CPF": "40325635862",
+            "enderDest": {
+                "xCpl": "Quadra 5",
+                "fone": "071991965292",
+                "UF": "BA",
+                "xPais": "Brasil",
+                "cPais": "1058",
+                "xLgr": "Rua Tanhaçu",
+                "xMun": "Lauro de Freitas",
+                "nro": "11",
+                "cMun": "2919207",
+                "xBairro": "Ipitanga",
+                "CEP": "42706730"
+            }
+        },
+        "transp": {
+            "modFrete": "9"
+        }
+    },
+    "infProt": {
+        "urlChave": "https://sistemas.sefaz.am.gov.br/nfceweb-hom/formConsulta.do",
+        "nProt": "",
+        "tpEmis": "9",
+        "qrCode": "https://sistemas.sefaz.am.gov.br/nfceweb-hom/consultarNFCe.jsp?p=13230533630582000149650010000003269000003271|2|2|22|143.42|6c46524e6969344f5850706947706f454f776f614a3636774243773d|1|5C7E7924FCECA948D343838437757FB929E3117F",
+        "dhRecbto": "",
+        "chNFe": "13230533630582000149650010000003269000003271",
+        "xMotivo": "Connection reset",
+        "tpAmb": "2",
+        "cStat": "000"
+    }
+}
