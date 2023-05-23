@@ -78,7 +78,6 @@ import org.apache.commons.lang3.StringUtils;
 import com.github.anastaciocintra.escpos.barcode.QRCode;
 import com.github.anastaciocintra.escpos.EscPos;
 import com.github.anastaciocintra.escpos.EscPosConst;
-import com.github.anastaciocintra.escpos.EscPos.CharacterCodeTable;
 import com.github.anastaciocintra.output.PrinterOutputStream;
 
 /**
@@ -105,6 +104,7 @@ public class NFCeMonitor {
         server.createContext("/NFeCartaCorrecao", new NFeCartaCorrecaoHandler());
         server.createContext("/NFeCancelamento", new NFeCancelamentoHandler());
         server.createContext("/NFeInutilizacao", new NFeInutilizacaoHandler());
+        server.createContext("/NFeImpressao", new NFeImpressaoHandler());
         server.setExecutor(null);
         server.start();
     }
@@ -844,6 +844,87 @@ public class NFCeMonitor {
         }
         
         return 1;
+    }
+    
+    /**
+     * Processa o serviço NFeImpressao.
+     */
+    static class NFeImpressaoHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange httpExchange) throws IOException {
+            String caminhoNFCeMonitor = System.getProperty("user.dir");
+        
+            String caminhoArquivoConfiguracoes = caminhoNFCeMonitor + "/NFCeMonitor.json";
+            String jsonConfiguracoes = readFile(caminhoArquivoConfiguracoes);
+
+            JSONObject configuracoes = new JSONObject(jsonConfiguracoes);
+            
+            String habilitarServicoImpressao = "0";
+            String nomeImpressora = "";
+            String tamanhoPapel = "58";
+            if (configuracoes.has("habilitarServicoImpressao")) {
+                habilitarServicoImpressao = configuracoes.get("habilitarServicoImpressao").toString();
+            }
+            if (configuracoes.has("nomeImpressora")) {
+                nomeImpressora = configuracoes.get("nomeImpressora").toString();
+            }
+            if (configuracoes.has("tamanhoPapel")) {
+                tamanhoPapel = configuracoes.get("tamanhoPapel").toString();
+            }
+            
+            InputStream inputStream = httpExchange.getRequestBody(); 
+            Scanner scanner = new Scanner(inputStream);
+            String linha;
+            String dados = new String();
+            
+            while (scanner.hasNextLine()) {
+                linha = scanner.nextLine();
+                dados = dados + linha;
+            }
+            
+            JSONObject json = new JSONObject(dados);
+            
+            String cStat = "";
+            String xMotivo = "";
+            
+            /*
+             * Imprime o DANFE.
+             */
+            
+            if (habilitarServicoImpressao.equals("1")) {
+                try {
+                    cStat = "100";
+                    xMotivo = "Sucesso";
+                    
+                    if(imprimeDANFE(json, nomeImpressora, tamanhoPapel) != 1) {
+                        cStat = "000";
+                        xMotivo = "Ocorreu um erro ao tentar imprimir o DANFE";
+                    }
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+
+                    cStat = "000";
+                    xMotivo = e.getMessage();
+                }
+            } else {
+                cStat = "000";
+                xMotivo = "Serviço de impressão desabilitado";
+            }
+            
+            JSONObject responseJSON = new JSONObject();
+            responseJSON.put("cStat", cStat);
+            responseJSON.put("xMotivo", xMotivo);
+
+            System.out.println(responseJSON.toString());
+
+            String response = responseJSON.toString();
+
+            httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+            httpExchange.sendResponseHeaders(200, 0);
+            OutputStream outputStream = httpExchange.getResponseBody();
+            outputStream.write(response.getBytes());
+            outputStream.close();
+        }
     }
     
     /**
