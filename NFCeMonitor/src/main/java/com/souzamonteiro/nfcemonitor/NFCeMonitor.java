@@ -264,6 +264,8 @@ public class NFCeMonitor {
      * @return                  Map contendo os parâmetros passados na URL.
      */
     private static int imprimeDANFE(JSONObject json, String nomeImpressora, String tamanhoPapel) {
+        System.out.println(json.toString());
+        
         /*
          * Meio de pagamento da venda:
          * 01 = Dinheiro;
@@ -310,145 +312,428 @@ public class NFCeMonitor {
             // Cria o objeto de impressão ESC/POS.
             EscPos escpos = new EscPos(printerOutputStream);
 
-            /*
-             * DANFE de 58mm de largura.
-             */
+            // DANFE de 58mm de largura.
+            int caracteresLinha = 31;
+            int deslocamentoCaracteres = 0;
+            if (tamanhoPapel.equals("80")) {
+                // O papel de 58mm permite imprimir até 31 caracteres por linha.
+                // O papel de 80mm permite imprimir até 40 caracteres por linha.
+                caracteresLinha = 40;
+                deslocamentoCaracteres = 5;
+            }
+            
+            // Layout 58mm:
+            //
+            // 0         1         2         3
+            // 0123456789012345678901234567890
+            // -------------------------------
+            //       CNPJ: 33630582000149
+            // Editora Roberto Luiz Souza Mont
+            //               eiro
+            // Rua Chile, s/n, Edifício Eduard
+            //      o De Moraes, sala 606
+            //      Centro, Salvador, BA
+            //   Documento Auxiliar da Nota
+            // Fiscal de Consumidor Eletrônica
+            // -------------------------------
+            //  Código|Descrição
+            //    Qtde|UN |  Vl Unit| Vl Total
+            // 1234567 12345678901234567890123
+            // 0000001|Banqueta plástica dobrá
+            // vel, branca, altura 220 mm
+            // 1234567 123 123456789 123456789
+            //    1,00|PC |    56,08|    56,08
+            // 0000002|Jogo de cinta com catra
+            // ca para amarração de carga 0,8 
+            // tf/0,4 tf, CC 080
+            //    1,00|PC |    37,82|    75,64
+            // 0000003|Óleo de cambio manual S
+            // AE 80W Flex Oil 1Lt
+            //    1,00|UN |    13,00|    13,00
+            // -------------------------------
+            // Qtde. total de itens          3
+            // Valor total R$           144,72
+            // Desconto R$                1,30
+            // Valor a Pagar R$         143,42
+            // FORMA PAGAMENTO   VALOR PAGO R$
+            // Dinheiro                  50,00
+            // Cartão de Crédito         40,00
+            // Cartão de Débito         100,00
+            // Troco R$                  46,58
+            // -------------------------------
+            //  Consulte pela Chave de Acesso
+            //  em https://sistemas.sefaz.am.g
+            //  ov.br/nfceweb-hom/formConsulta
+            //  .do
+            //  1323 0533 6305 8200 0149 6500
+            //    1000 0003 1810 0000 3193
+            // -------------------------------
+            // CONSUMIDOR - CPF: 40325635862 -
+            //     Andréia Rita da Silva
+            // -------------------------------
+            //    NFC-e n.: 318 Série: 1
+            //     2023-05-19 08:24:28
+            //
+            //  Protocolo de autorização:
+            //       113230010671996
+            //     Data de autorização:
+            //     2023-05-19 07:24:33
+            //
+            //    EMITIDA EM AMBIENTE DE
+            // HOMOLOGAÇÃO - SEM VALOR FISCAL
+            //
+            //        +--------------+
+            //        |              |
+            //        |              |
+            //        |              |
+            //        |              |
+            //        |              |
+            //        |              |
+            //        +--------------+
+            //
+            // -------------------------------
+            // Tributos Totais Incidentes (Lei
+            //  Federal 12.741/2012): R$73,27.
+            //  Trib aprox R$: 46,68 Fed, 26,5
+            // 9 Est e 0,00 Mun. Fonte: IBPT.
+            
+            // Layout 80mm:
+            //
+            // 0         1         2         3
+            // 0123456789012345678901234567890123456789
+            //    Documento Auxiliar da Nota Fiscal 
+            //        de Consumidor Eletrônica
+            // ----------------------------------------
+            //  Código|Descrição
+            //    Qtde|UN |  Vl Unit| Vl Total
+            // 1234567 12345678901234567890123456789012
+            // 0000001|Banqueta plástica dobrável, bran
+            // ca, altura 220 mm
+            // 1234567 123 12345678901234 12345678901234
+            //    1,00|PC |         56,08|         56,08
+            // ----------------------------------------
+            // 0         1         2         3
+            // 0123456789012345678901234567890123456789
+            // 1234567890123456789012345678901234567890
+            // Qtde. total de itens                   3 tam = 20
+            // Valor total R$                    144,72 tam = 14
+            // Desconto R$                         1,30 tam = 11
+            // Valor a Pagar R$                  143,42 tam = 16
+            // FORMA PAGAMENTO            VALOR PAGO R$
+            // Dinheiro                           50,00 tam = tamanho("Dinheiro")
+            // Cartão de Crédito                  40,00 tam = tamanho("Cartão de Crédito")
+            // Cartão de Débito                  100,00 tam = tamanho("Cartão de Débito")
+            // Troco R$                           46,58 tam = 8
+            // ----------------------------------------
+            
+            // Inicializa a impressora.
+            escpos.initializePrinter();
+            // Seleciona a página de código Latin-1.
+            escpos.setPrinterCharacterTable(3);
+
+            // Lê o objeto contendo os dados da NFC-e.
+            JSONObject jsonInfNFe = json.getJSONObject("infNFe");
+            JSONObject jsonIde = jsonInfNFe.getJSONObject("ide");
+            JSONObject jsonEmit = jsonInfNFe.getJSONObject("emit");
+            JSONObject jsonEnderEmit = jsonEmit.getJSONObject("enderEmit");
+            JSONObject jsonDest = jsonInfNFe.getJSONObject("dest");
+            JSONArray jsonDet = jsonInfNFe.getJSONArray("det");
+            JSONObject jsonTotal = jsonInfNFe.getJSONObject("total");
+            JSONObject jsonICMSTot = jsonTotal.getJSONObject("ICMSTot");
+            JSONObject jsonPag = jsonInfNFe.getJSONObject("pag");
+            JSONArray jsonDetPag = jsonPag.getJSONArray("detPag");
+            JSONObject jsonInfAdic = jsonInfNFe.getJSONObject("infAdic");
+            JSONObject jsonInfProt = json.getJSONObject("infProt");
+
+            // Dados do emitente.
+            String emitCNPJ = jsonEmit.get("CNPJ").toString();
+            String emitXNome = jsonEmit.get("xNome").toString();
+            String emitXLgr = jsonEnderEmit.get("xLgr").toString();
+            String emitNro = jsonEnderEmit.get("nro").toString();
+            String emitXCpl = jsonEnderEmit.get("xCpl").toString();
+            String emitXBairro = jsonEnderEmit.get("xBairro").toString();
+            String emitXMun = jsonEnderEmit.get("xMun").toString();
+            String emitUF = jsonEnderEmit.get("UF").toString();
+
+            // Imprime o cabeçalho do DANFE.
+            escpos.writeLF(StringUtils.center("CNPJ: " + formatarString(emitCNPJ, "##.###.###/####-##"), caracteresLinha));
+            escpos.writeLF(StringUtils.abbreviate(emitXNome, caracteresLinha));
+            escpos.writeLF(StringUtils.center(emitXLgr + ", " + emitNro, caracteresLinha));
+            escpos.writeLF(StringUtils.center(emitXCpl, caracteresLinha));
+            escpos.writeLF(StringUtils.center(emitXBairro + ", " + emitXMun + ", " + emitUF, caracteresLinha));
+            
+            // 0         1         2         3
+            // 0123456789012345678901234567890
+            //   Documento Auxiliar da Nota
+            // Fiscal de Consumidor Eletrônica
             if (tamanhoPapel.equals("58")) {
+                escpos.writeLF(StringUtils.center("Documento Auxiliar da Nota", caracteresLinha));
+                escpos.writeLF(StringUtils.center("Fiscal de Consumidor Eletrônica", caracteresLinha));
+            // 0         1         2         3
+            // 0123456789012345678901234567890123456789
+            //    Documento Auxiliar da Nota Fiscal 
+            //        de Consumidor Eletrônica
+            } else {
+                escpos.writeLF(StringUtils.center("Documento Auxiliar da Nota Fiscal", caracteresLinha));
+                escpos.writeLF(StringUtils.center("de Consumidor Eletrônica", caracteresLinha));
+            }
+            
+            // Dados da autorização.
+            String tpAmb = jsonInfProt.get("tpAmb").toString();
+            String tpEmis = jsonInfProt.get("tpEmis").toString();
+            String chNFe = jsonInfProt.get("chNFe").toString();
+            String dhRecbto = jsonInfProt.get("dhRecbto").toString();
+            String nProt = jsonInfProt.get("nProt").toString();
+            String urlChave = jsonInfProt.get("urlChave").toString();
+            String qrCode = jsonInfProt.get("qrCode").toString();
+
+            if (tpEmis.equals("9")) {
+                escpos.writeLF(StringUtils.center("EMITIDA EM CONTINGÊNCIA", caracteresLinha));
+                escpos.writeLF(StringUtils.center("Pendente de autorização", caracteresLinha));
+            }
+            
+            // Código|Descrição
+            //   Qtde|UN |       Vl Unit|      Vl Total
+            if (tamanhoPapel.equals("58")) {
+                escpos.writeLF("-------------------------------");
+                escpos.writeLF(" Código|Descrição");
+                escpos.writeLF("   Qtde|UN |  Vl Unit| Vl Total");
+            } else {
+                escpos.writeLF("----------------------------------------");
+                escpos.writeLF("Código|Descrição");
+                escpos.writeLF("  Qtde|UN |       Vl Unit|      Vl Total");
+            }
+            
+            // Produtos constantes da nota.
+            int numeroProdutos = jsonDet.length();
+            for (int i = 0; i < numeroProdutos; i++) {
+                JSONObject itemDet = jsonDet.getJSONObject(i);
+                JSONObject jsonProd = itemDet.getJSONObject("prod");
+
+                String cProd = jsonProd.get("cProd").toString();
+                String xProd;
+                if (tpAmb.equals("2")) {
+                    xProd = "NOTA FISCAL EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL";
+                } else {
+                    xProd = jsonProd.get("xProd").toString();
+                }
+                String qCom = jsonProd.get("qCom").toString();
+                String uCom = jsonProd.get("uCom").toString();
+                String vUnCom = jsonProd.get("vUnCom").toString();
+                String vProduto = jsonProd.get("vProd").toString();
+                
                 // 0         1         2         3
                 // 0123456789012345678901234567890
-                // -------------------------------
-                //       CNPJ: 33630582000149
-                // Editora Roberto Luiz Souza Mont
-                //               eiro
-                // Rua Chile, s/n, Edifício Eduard
-                //      o De Moraes, sala 606
-                //      Centro, Salvador, BA
-                //   Documento Auxiliar da Nota
-                // Fiscal de Consumidor Eletrônica
-                // -------------------------------
-                // Código|Descrição
+                //  Código|Descrição
                 //    Qtde|UN |  Vl Unit| Vl Total
-                // 001|Banqueta plástica dobrável,
-                //     branca, altura 220 mm
+                // 1234567 12345678901234567890123
+                // 0000001|Banqueta plástica dobrá
+                // vel, branca, altura 220 mm
+                // 1234567 123 123456789 123456789
                 //    1,00|PC |    56,08|    56,08
-                // 002|Jogo de cinta com catraca p
-                //     ara amarração de carga 0,8
-                //     tf/0,4 tf, CC 080
-                //    1,00|PC |    37,82|    75,64
-                // 003|Óleo de cambio manual SAE 8
-                //     0 W Flex Oil 1Lt
-                //    1,00|UN |    13,00|    13,00
-                // -------------------------------
-                //                     12345678901
-                // Qtde. total de itens          3
-                //               12345678901234567
-                // Valor total R$           144,72
-                //            12345678901234567890
-                // Desconto R$                1,30
-                //                 123456789012345
-                // Valor a Pagar R$         143,42
-                // FORMA PAGAMENTO   VALOR PAGO R$
-                //         12345678901234567890123
-                // Dinheiro                  50,00
-                //                  12345678901234
-                // Cartão de Crédito         40,00
-                //                 123456789012345
-                // Cartão de Débito         100,00
-                //         12345678901234567890123
-                // Troco R$                  46,58
-                // -------------------------------
-                //  Consulte pela Chave de Acesso
-                //  em https://sistemas.sefaz.am.g
-                //  ov.br/nfceweb-hom/formConsulta
-                //  .do
-                //  1323 0533 6305 8200 0149 6500
-                //    1000 0003 1810 0000 3193
-                // -------------------------------
-                // CONSUMIDOR - CPF: 40325635862 -
-                //     Andréia Rita da Silva
-                // -------------------------------
-                //    NFC-e n.: 318 Série: 1
-                //     2023-05-19 08:24:28
-                //
-                //  Protocolo de autorização:
-                //       113230010671996
-                //     Data de autorização:
-                //     2023-05-19 07:24:33
-                //
-                //    EMITIDA EM AMBIENTE DE
-                // HOMOLOGAÇÃO - SEM VALOR FISCAL
-                //
-                //        +--------------+
-                //        |              |
-                //        |              |
-                //        |              |
-                //        |              |
-                //        |              |
-                //        |              |
-                //        +--------------+
-                //
-                // -------------------------------
-                // Tributos Totais Incidentes (Lei
-                //  Federal 12.741/2012): R$73,27.
-                //  Trib aprox R$: 46,68 Fed, 26,5
-                // 9 Est e 0,00 Mun. Fonte: IBPT.
 
-                // Inicializa a impressora.
-                escpos.initializePrinter();
-                // Seleciona a página de código Latin-1.
-                escpos.setPrinterCharacterTable(3);
-
-                // Lê o objeto contendo os dados da NFC-e.
-                JSONObject jsonInfNFe = json.getJSONObject("infNFe");
-                JSONObject jsonIde = jsonInfNFe.getJSONObject("ide");
-                JSONObject jsonEmit = jsonInfNFe.getJSONObject("emit");
-                JSONObject jsonEnderEmit = jsonEmit.getJSONObject("enderEmit");
-                JSONObject jsonDest = jsonInfNFe.getJSONObject("dest");
-                JSONArray jsonDet = jsonInfNFe.getJSONArray("det");
-                JSONObject jsonTotal = jsonInfNFe.getJSONObject("total");
-                JSONObject jsonICMSTot = jsonTotal.getJSONObject("ICMSTot");
-                JSONObject jsonPag = jsonInfNFe.getJSONObject("pag");
-                JSONArray jsonDetPag = jsonPag.getJSONArray("detPag");
-                JSONObject jsonInfAdic = jsonInfNFe.getJSONObject("infAdic");
-                JSONObject jsonInfProt = json.getJSONObject("infProt");
-
-                // Dados do emitente.
-                String emitCNPJ = jsonEmit.get("CNPJ").toString();
-                String emitXNome = jsonEmit.get("xNome").toString();
-                String emitXLgr = jsonEnderEmit.get("xLgr").toString();
-                String emitNro = jsonEnderEmit.get("nro").toString();
-                String emitXCpl = jsonEnderEmit.get("xCpl").toString();
-                String emitXBairro = jsonEnderEmit.get("xBairro").toString();
-                String emitXMun = jsonEnderEmit.get("xMun").toString();
-                String emitUF = jsonEnderEmit.get("UF").toString();
-
-                // Imprime o cabeçalho do DANFE.
-                escpos.writeLF(StringUtils.center("CNPJ: " + formatarString(emitCNPJ, "##.###.###/####-##"), 31));
-                escpos.writeLF(StringUtils.abbreviate(emitXNome, 31));
-                escpos.writeLF(StringUtils.center(emitXLgr + ", " + emitNro, 31));
-                escpos.writeLF(StringUtils.center(emitXCpl, 31));
-                escpos.writeLF(StringUtils.center(emitXBairro + ", " + emitXMun + ", " + emitUF, 31));
-                escpos.writeLF(StringUtils.center("Documento Auxiliar da Nota", 31));
-                escpos.writeLF(StringUtils.center("Fiscal de Consumidor Eletrônica", 31));
-                escpos.writeLF("-------------------------------");
-                escpos.writeLF("Código|Descrição");
-                escpos.writeLF("   Qtde|UN |  Vl Unit| Vl Total");
                 
-                // Dados da autorização.
-                String tpAmb = jsonInfProt.get("tpAmb").toString();
-                String tpEmis = jsonInfProt.get("tpEmis").toString();
-                String chNFe = jsonInfProt.get("chNFe").toString();
-                String dhRecbto = jsonInfProt.get("dhRecbto").toString();
-                String nProt = jsonInfProt.get("nProt").toString();
-                String urlChave = jsonInfProt.get("urlChave").toString();
-                String qrCode = jsonInfProt.get("qrCode").toString();
+                // 0         1         2         3
+                // 0123456789012345678901234567890123456789
+                // 1234567890123456789012345678901234567890
+                //  Código|Descrição
+                //    Qtde|UN |  Vl Unit| Vl Total
+                // 1234567 12345678901234567890123456789012
+                // 0000001|Banqueta plástica dobrável, bran
+                // ca, altura 220 mm
+                // 1234567 123 12345678901234 12345678901234
+                //    1,00|PC |         56,08|         56,08
+                //                 12345
+                //    1,00|PC |    56,08|    56,08
+
+                escpos.writeLF(StringUtils.leftPad(cProd, 7, "0") + "|" + StringUtils.abbreviate(xProd, caracteresLinha - 8));
+                escpos.writeLF(StringUtils.leftPad(numberFormat.format(Float.parseFloat(qCom)), 7) + "|" + StringUtils.rightPad(uCom, 3) + "|" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vUnCom)), 9 + deslocamentoCaracteres) + "|" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vProduto)), 9 + deslocamentoCaracteres));
+            }
+
+            // Totais da nota.
+            String vProd = jsonICMSTot.get("vProd").toString();
+            String vDesc = jsonICMSTot.get("vDesc").toString();
+            String vNF = jsonICMSTot.get("vNF").toString();
+            
+            if (tamanhoPapel.equals("58")) {
+                escpos.writeLF("-------------------------------");
+            } else {
+                escpos.writeLF("----------------------------------------");
+            }
+            
+            // 0         1         2         3
+            // 0123456789012345678901234567890
+            // Qtde. total de itens          3
+            // Valor total R$           144,72
+            // Desconto R$                1,30
+            // Valor a Pagar R$         143,42
+            // FORMA PAGAMENTO   VALOR PAGO R$
+            // Dinheiro                  50,00
+            // Cartão de Crédito         40,00
+            // Cartão de Débito         100,00
+            // Troco R$                  46,58
+            
+            // 0         1         2         3
+            // 0123456789012345678901234567890123456789
+            // 1234567890123456789012345678901234567890
+            // Qtde. total de itens                   3 tam = 20
+            // Valor total R$                    144,72 tam = 14
+            // Desconto R$                         1,30 tam = 11
+            // Valor a Pagar R$                  143,42 tam = 16
+            // FORMA PAGAMENTO            VALOR PAGO R$
+            // Dinheiro                           50,00 tam = tamanho("Dinheiro")
+            // Cartão de Crédito                  40,00 tam = tamanho("Cartão de Crédito")
+            // Cartão de Débito                  100,00 tam = tamanho("Cartão de Débito")
+            // Troco R$                           46,58 tam = 8
+            
+            escpos.writeLF("Qtde. total de itens" + StringUtils.leftPad(String.valueOf(numeroProdutos), caracteresLinha - 20 + deslocamentoCaracteres * 2));
+            escpos.writeLF("Valor total R$" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vProd)), caracteresLinha - 14 + deslocamentoCaracteres * 2));
+            escpos.writeLF("Desconto R$" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vDesc)), caracteresLinha - 11 + deslocamentoCaracteres * 2));
+            escpos.writeLF("Valor a Pagar R$" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vNF)), caracteresLinha - 16 + deslocamentoCaracteres * 2));
+            
+            if (tamanhoPapel.equals("58")) {
+                escpos.writeLF("FORMA PAGAMENTO   VALOR PAGO R$");
+            } else {
+                escpos.writeLF("FORMA PAGAMENTO             VALOR PAGO R$");
+            }
+            
+            // Meios de pagamento.
+            for (int i = 0; i < jsonDetPag.length(); i++) {
+                JSONObject jsonItemDetPag = jsonDetPag.getJSONObject(i);
+                String tPag = meioPagamento.get(jsonItemDetPag.get("tPag").toString());
+                String vPag = jsonItemDetPag.get("vPag").toString();
+
+                escpos.writeLF(tPag + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vPag)), caracteresLinha - tPag.length()));
+            }
+
+            // Valor do troco.
+            String vTroco;
+            if (jsonPag.has("vTroco")) {
+                vTroco = jsonPag.get("vTroco").toString();
+            } else {
+                vTroco = "0.00";
+            }
+            escpos.writeLF("Troco R$" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vTroco)), caracteresLinha - 8 + deslocamentoCaracteres * 2));
+            
+            if (tamanhoPapel.equals("58")) {
+                escpos.writeLF("-------------------------------");
+            } else {
+                escpos.writeLF("----------------------------------------");
+            }
+            
+            escpos.writeLF(StringUtils.center("Consulte pela Chave de Acesso em " + urlChave, caracteresLinha));
+            escpos.writeLF(StringUtils.center(formataChaveNFe(chNFe), caracteresLinha));
+            
+            if (tamanhoPapel.equals("58")) {
+                escpos.writeLF("-------------------------------");
+            } else {
+                escpos.writeLF("----------------------------------------");
+            }
+            
+            // Dados do consumidor.
+            String destCNPJ;
+            if (jsonDest.has("CPF")) {
+                destCNPJ = " - CPF: " + formatarString(jsonDest.get("CPF").toString(), "###.###.###-##");
+            } else if (jsonDest.has("CNPJ")) {
+                destCNPJ = " - CNPJ: " + formatarString(jsonDest.get("CNPJ").toString(), "##.###.###/####-##");
+            } else {
+                destCNPJ = " NÃO IDENTIFICADO";
+            }
+            String destXNome;
+            if (jsonDest.has("xNome")) {
+                destXNome = " - " + jsonDest.get("xNome").toString();
+            } else {
+                destXNome = "";
+            }
+            escpos.writeLF(StringUtils.center("CONSUMIDOR" + destCNPJ + destXNome, caracteresLinha));
+            
+            if (tamanhoPapel.equals("58")) {
+                escpos.writeLF("-------------------------------");
+            } else {
+                escpos.writeLF("----------------------------------------");
+            }
+            
+            // Dados da NF-e.
+            String serie = jsonIde.get("serie").toString();
+            String nNF = jsonIde.get("nNF").toString();
+            String dhEmi = jsonIde.get("dhEmi").toString();
+
+            escpos.writeLF(StringUtils.center("NFC-e n.: " + nNF + " Série: " + serie, caracteresLinha));
+            escpos.writeLF(StringUtils.center(dhEmi, caracteresLinha));
+            escpos.writeLF("");
+            
+            if (tpEmis.equals("1")) {
+                escpos.writeLF(StringUtils.center("Protocolo de autorização:", caracteresLinha));
+                escpos.writeLF(StringUtils.center(nProt, caracteresLinha));
+                escpos.writeLF(StringUtils.center("Data de autorização:", caracteresLinha));
+                escpos.writeLF(StringUtils.center(formataDataNFe(dhRecbto), caracteresLinha));
+                escpos.writeLF("");
+            } else {
+                escpos.writeLF(StringUtils.center("Via consumidor", caracteresLinha));
+                escpos.writeLF(StringUtils.center("EMITIDA EM CONTINGÊNCIA", caracteresLinha));
+                escpos.writeLF(StringUtils.center("Pendente de autorização", caracteresLinha));
+                escpos.writeLF("");
+            }
+            
+            if (tpAmb.equals("2")) {
+                escpos.writeLF(StringUtils.center("EMITIDA EM AMBIENTE DE", caracteresLinha));
+                escpos.writeLF(StringUtils.center("HOMOLOGAÇÃO - SEM VALOR FISCAL", caracteresLinha));
+                escpos.writeLF("");
+            }
+
+            // Imprime o QR Code.
+            QRCode qrcode = new QRCode();
+            qrcode.setSize(6);
+            qrcode.setJustification(EscPosConst.Justification.Center);
+            escpos.write(qrcode, qrCode);
+
+            // Informações complementares.
+            if (tamanhoPapel.equals("58")) {
+                escpos.writeLF("-------------------------------");
+            } else {
+                escpos.writeLF("----------------------------------------");
+            }
+            
+            String infCpl = jsonInfAdic.get("infCpl").toString();
+            escpos.writeLF(infCpl);
+            
+            // Corta o papel se a impressora suportar.
+            escpos.feed(5).cut(EscPos.CutMode.FULL);
+            
+            if (tpEmis.equals("9")) {
+                // Imprime o cabeçalho do DANFE.
+                escpos.writeLF(StringUtils.center("CNPJ: " + formatarString(emitCNPJ, "##.###.###/####-##"), caracteresLinha));
+                escpos.writeLF(StringUtils.abbreviate(emitXNome, caracteresLinha));
+                escpos.writeLF(StringUtils.center(emitXLgr + ", " + emitNro, caracteresLinha));
+                escpos.writeLF(StringUtils.center(emitXCpl, caracteresLinha));
+                escpos.writeLF(StringUtils.center(emitXBairro + ", " + emitXMun + ", " + emitUF, caracteresLinha));
+
+                if (tamanhoPapel.equals("58")) {
+                    escpos.writeLF(StringUtils.center("Documento Auxiliar da Nota", caracteresLinha));
+                    escpos.writeLF(StringUtils.center("Fiscal de Consumidor Eletrônica", caracteresLinha));
+                } else {
+                    escpos.writeLF(StringUtils.center("Documento Auxiliar da Nota Fiscal", caracteresLinha));
+                    escpos.writeLF(StringUtils.center("de Consumidor Eletrônica", caracteresLinha));
+                }
+                
+                escpos.writeLF(StringUtils.center("EMITIDA EM CONTINGÊNCIA", caracteresLinha));
+                escpos.writeLF(StringUtils.center("Pendente de autorização", caracteresLinha));
+
+               if (tamanhoPapel.equals("58")) {
+                    escpos.writeLF("-------------------------------");
+                    escpos.writeLF(" Código|Descrição");
+                    escpos.writeLF("   Qtde|UN |  Vl Unit| Vl Total");
+                } else {
+                    escpos.writeLF("----------------------------------------");
+                    escpos.writeLF("Código|Descrição");
+                    escpos.writeLF("  Qtde|UN |       Vl Unit|      Vl Total");
+                }
 
                 // Produtos constantes da nota.
-                int numeroProdutos = jsonDet.length();
                 for (int i = 0; i < numeroProdutos; i++) {
                     JSONObject itemDet = jsonDet.getJSONObject(i);
                     JSONObject jsonProd = itemDet.getJSONObject("prod");
-                    
+
                     String cProd = jsonProd.get("cProd").toString();
                     String xProd;
                     if (tpAmb.equals("2")) {
@@ -459,94 +744,99 @@ public class NFCeMonitor {
                     String qCom = jsonProd.get("qCom").toString();
                     String uCom = jsonProd.get("uCom").toString();
                     String vUnCom = jsonProd.get("vUnCom").toString();
-                    String vProd = jsonProd.get("vProd").toString();
+                    String vProduto = jsonProd.get("vProd").toString();
                     
-                    escpos.writeLF(StringUtils.leftPad(cProd, 3, "0") + "|" + StringUtils.abbreviate(xProd, 27));
-                    escpos.writeLF(StringUtils.leftPad(numberFormat.format(Float.parseFloat(qCom)), 7) + "|" + StringUtils.rightPad(uCom, 3) + "|" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vUnCom)), 9) + "|" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vProd)), 9));
+                    escpos.writeLF(StringUtils.leftPad(cProd, 7, "0") + "|" + StringUtils.abbreviate(xProd, caracteresLinha - 8));
+                    escpos.writeLF(StringUtils.leftPad(numberFormat.format(Float.parseFloat(qCom)), 7) + "|" + StringUtils.rightPad(uCom, 3) + "|" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vUnCom)), 9 + deslocamentoCaracteres) + "|" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vProduto)), 9 + deslocamentoCaracteres));
                 }
 
                 // Totais da nota.
-                String vProd = jsonICMSTot.get("vProd").toString();
-                String vDesc = jsonICMSTot.get("vDesc").toString();
-                String vNF = jsonICMSTot.get("vNF").toString();
-                escpos.writeLF("-------------------------------");
-                escpos.writeLF("Qtde. total de itens" + StringUtils.leftPad(String.valueOf(numeroProdutos), 11));
-                escpos.writeLF("Valor total R$" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vProd)), 17));
-                escpos.writeLF("Desconto R$" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vDesc)), 20));
-                escpos.writeLF("Valor a Pagar R$" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vNF)), 15));;
-                escpos.writeLF("FORMA PAGAMENTO   VALOR PAGO R$");
+                if (tamanhoPapel.equals("58")) {
+                    escpos.writeLF("-------------------------------");
+                } else {
+                    escpos.writeLF("----------------------------------------");
+                }
+
+                escpos.writeLF("Qtde. total de itens" + StringUtils.leftPad(String.valueOf(numeroProdutos), caracteresLinha - 20 + deslocamentoCaracteres * 2));
+                escpos.writeLF("Valor total R$" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vProd)), caracteresLinha - 14 + deslocamentoCaracteres * 2));
+                escpos.writeLF("Desconto R$" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vDesc)), caracteresLinha - 11 + deslocamentoCaracteres * 2));
+                escpos.writeLF("Valor a Pagar R$" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vNF)), caracteresLinha - 16 + deslocamentoCaracteres * 2));
+
+                if (tamanhoPapel.equals("58")) {
+                    escpos.writeLF("FORMA PAGAMENTO   VALOR PAGO R$");
+                } else {
+                    escpos.writeLF("FORMA PAGAMENTO             VALOR PAGO R$");
+                }
 
                 // Meios de pagamento.
                 for (int i = 0; i < jsonDetPag.length(); i++) {
                     JSONObject jsonItemDetPag = jsonDetPag.getJSONObject(i);
                     String tPag = meioPagamento.get(jsonItemDetPag.get("tPag").toString());
                     String vPag = jsonItemDetPag.get("vPag").toString();
-                    
-                    escpos.writeLF(tPag + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vPag)), 31 - tPag.length()));
+
+                    escpos.writeLF(tPag + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vPag)), caracteresLinha - tPag.length()));
                 }
 
                 // Valor do troco.
-                String vTroco = jsonPag.get("vTroco").toString();
-                escpos.writeLF("Troco R$" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vTroco)), 23));
-                escpos.writeLF("-------------------------------");
-                escpos.writeLF(StringUtils.center("Consulte pela Chave de Acesso em " + urlChave, 31));
-                escpos.writeLF(StringUtils.center(formataChaveNFe(chNFe), 31));
-                escpos.writeLF("-------------------------------");
-                
-                // Dados do consumidor.
-                String destCNPJ;
-                if (jsonDest.has("CPF")) {
-                    destCNPJ = " - CPF: " + formatarString(jsonDest.get("CPF").toString(), "###.###.###-##");
-                } else if (jsonDest.has("CNPJ")) {
-                    destCNPJ = " - CNPJ: " + formatarString(jsonDest.get("CNPJ").toString(), "##.###.###/####-##");
-                } else {
-                    destCNPJ = " NÃO IDENTIFICADO";
-                }
-                String destXNome;
-                if (jsonDest.has("xNome")) {
-                    destXNome = " - " + jsonDest.get("xNome").toString();
-                } else {
-                    destXNome = "";
-                }
-                escpos.writeLF(StringUtils.center("CONSUMIDOR" + destCNPJ + destXNome, 31));
-                escpos.writeLF("-------------------------------");
-                
-                // Dados da NF-e.
-                String serie = jsonIde.get("serie").toString();
-                String nNF = jsonIde.get("nNF").toString();
-                String dhEmi = jsonIde.get("dhEmi").toString();
+                escpos.writeLF("Troco R$" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vTroco)), caracteresLinha - 8 + deslocamentoCaracteres * 2));
 
-                escpos.writeLF(StringUtils.center("NFC-e n.: " + nNF + " Série: " + serie, 31));
-                escpos.writeLF(StringUtils.center(dhEmi, 31));
+                if (tamanhoPapel.equals("58")) {
+                    escpos.writeLF("-------------------------------");
+                } else {
+                    escpos.writeLF("----------------------------------------");
+                }
+
+                escpos.writeLF(StringUtils.center("Consulte pela Chave de Acesso em " + urlChave, caracteresLinha));
+                escpos.writeLF(StringUtils.center(formataChaveNFe(chNFe), caracteresLinha));
+
+                if (tamanhoPapel.equals("58")) {
+                    escpos.writeLF("-------------------------------");
+                } else {
+                    escpos.writeLF("----------------------------------------");
+                }
+
+                // Dados do consumidor.
+                escpos.writeLF(StringUtils.center("CONSUMIDOR" + destCNPJ + destXNome, caracteresLinha));
+
+                if (tamanhoPapel.equals("58")) {
+                    escpos.writeLF("-------------------------------");
+                } else {
+                    escpos.writeLF("----------------------------------------");
+                }
+
+                // Dados da NF-e.
+                escpos.writeLF(StringUtils.center("NFC-e n.: " + nNF + " Série: " + serie, caracteresLinha));
+                escpos.writeLF(StringUtils.center(dhEmi, caracteresLinha));
                 escpos.writeLF("");
-                
-                escpos.writeLF(StringUtils.center("Protocolo de autorização:", 31));
-                escpos.writeLF(StringUtils.center(nProt, 31));
-                escpos.writeLF(StringUtils.center("Data de autorização:", 31));
-                escpos.writeLF(StringUtils.center(formataDataNFe(dhRecbto), 31));
+
+                escpos.writeLF(StringUtils.center("Via estabelecimento", caracteresLinha));
+                escpos.writeLF(StringUtils.center("EMITIDA EM CONTINGÊNCIA", caracteresLinha));
+                escpos.writeLF(StringUtils.center("Pendente de autorização", caracteresLinha));
                 escpos.writeLF("");
+
                 if (tpAmb.equals("2")) {
-                    escpos.writeLF(StringUtils.center("EMITIDA EM AMBIENTE DE", 31));
-                    escpos.writeLF(StringUtils.center("HOMOLOGAÇÃO - SEM VALOR FISCAL", 31));
+                    escpos.writeLF(StringUtils.center("EMITIDA EM AMBIENTE DE", caracteresLinha));
+                    escpos.writeLF(StringUtils.center("HOMOLOGAÇÃO - SEM VALOR FISCAL", caracteresLinha));
                     escpos.writeLF("");
                 }
-                
+
                 // Imprime o QR Code.
-                QRCode qrcode = new QRCode();
-                qrcode.setSize(6);
-                qrcode.setJustification(EscPosConst.Justification.Center);
                 escpos.write(qrcode, qrCode);
-                
+
                 // Informações complementares.
-                String infCpl = jsonInfAdic.get("infCpl").toString();
-                escpos.writeLF("-------------------------------");
+                if (tamanhoPapel.equals("58")) {
+                    escpos.writeLF("-------------------------------");
+                } else {
+                    escpos.writeLF("----------------------------------------");
+                }
+
                 escpos.writeLF(infCpl);
-                
+
                 // Corta o papel se a impressora suportar.
                 escpos.feed(5).cut(EscPos.CutMode.FULL);
-                escpos.close();
-                
             }
+            
+            escpos.close();
         } catch (Exception e) {
             System.out.println(e.toString());
             
@@ -1658,7 +1948,6 @@ public class NFCeMonitor {
                             json.put("infProt", jsonInfProt);
                             
                             imprimeDANFE(json, nomeImpressora, tamanhoPapel);
-                            System.out.println(json.toString());
                         }
                         
                         System.out.println("Protocolo: " + nProt);
@@ -1697,7 +1986,6 @@ public class NFCeMonitor {
                             json.put("infProt", jsonInfProt);
                             
                             imprimeDANFE(json, nomeImpressora, tamanhoPapel);
-                            System.out.println(json.toString());
                         }
                         
                         System.out.println("Protocolo: " + nProt);
@@ -1780,7 +2068,6 @@ public class NFCeMonitor {
                             json.put("infProt", jsonInfProt);
                             
                             imprimeDANFE(json, nomeImpressora, tamanhoPapel);
-                            System.out.println(json.toString());
                         }
                     } catch (Exception error) {
                         System.out.println(error.getMessage());
