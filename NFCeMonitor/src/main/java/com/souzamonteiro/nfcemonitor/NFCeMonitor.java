@@ -49,12 +49,16 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import javax.swing.text.MaskFormatter;
 import java.net.InetSocketAddress;
 import java.security.NoSuchAlgorithmException;
+import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -68,6 +72,8 @@ import com.sun.net.httpserver.HttpServer;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.github.anastaciocintra.escpos.barcode.QRCode;
 import com.github.anastaciocintra.escpos.EscPos;
@@ -184,61 +190,368 @@ public class NFCeMonitor {
     }
     
     /**
+     * Formata uma string.
+     * 
+     * @param   texto    String a ser formatada.
+     * @param   mascara  Máscara de formatação.
+     * @return           String formatada.
+     */
+    public static String formatarString(String texto, String mascara) {
+        try {
+            MaskFormatter mf = new MaskFormatter(mascara);
+            mf.setValueContainsLiteralCharacters(false);
+            
+            return mf.valueToString(texto);
+        } catch (Exception e) {
+            System.out.println(e.toString());
+            
+            return texto;
+        }
+        
+    }
+    
+    /**
+     * Formata uma chave de acesso de uma NF-e para impressão no DANFE.
+     * 
+     * @param   chave  Chave a ser formatada.
+     * @return         Chave formatada.
+     */
+    public static String formataChaveNFe(String chave) {
+        String chaveFormatada = "";
+        
+        // Chave: 13230533630582000149650010000001391000001408
+        // Pos:   01234567890123456789012345678901234567890123
+        // 0123 4567 8901 2345 6789 0123 4567 8901 2345 6789 0123
+        chaveFormatada += chave.substring(0, 4) + " ";
+        chaveFormatada += chave.substring(4, 8) + " ";
+        chaveFormatada += chave.substring(8, 12) + " ";
+        chaveFormatada += chave.substring(12, 16) + " ";
+        chaveFormatada += chave.substring(16, 20) + " ";
+        chaveFormatada += chave.substring(20, 24) + " ";
+        chaveFormatada += chave.substring(24, 28) + " ";
+        chaveFormatada += chave.substring(28, 32) + " ";
+        chaveFormatada += chave.substring(32, 36) + " ";
+        chaveFormatada += chave.substring(36, 40) + " ";
+        chaveFormatada += chave.substring(40, 44);
+                
+        return chaveFormatada;
+    }
+    
+    /**
+     * Formata uma data de recibo de uma NF-e para impressão no DANFE.
+     * 
+     * @param   data  Data a ser formatada.
+     * @return        Data formatada.
+     */
+    public static String formataDataNFe(String data) {
+        String dataFormatada = "";
+        
+        // Data: 2023-05-23T10:42:23-04:00
+        // Pos:  0123456789012345678901234
+        // 01234569 12345678
+        dataFormatada += data.substring(0, 10) + " ";
+        dataFormatada += data.substring(11, 19);
+                
+        return dataFormatada;
+    }
+    
+    /**
      * Imprime o DANFE em uma impressora ESC/POS.
      * 
      * @param   json            Dados da NF-e.
      * @param   nomeImpressora  Nome da impressora ESC/POS.
      * @param   tamanhoPapel    Tamanho do papel (58mm ou 80mm).
-     * @return           Map contendo os parâmetros passados na URL.
+     * @return                  Map contendo os parâmetros passados na URL.
      */
     private static int imprimeDANFE(JSONObject json, String nomeImpressora, String tamanhoPapel) {
-        JSONObject jsonInfNFe = json.getJSONObject("infNFe");
-        JSONObject jsonIde = jsonInfNFe.getJSONObject("ide");
-        JSONObject jsonEmit = jsonInfNFe.getJSONObject("emit");
-        JSONObject jsonEnderEmit = jsonEmit.getJSONObject("enderEmit");
-        JSONObject jsonDest = jsonInfNFe.getJSONObject("dest");
-        JSONArray jsonDet = jsonInfNFe.getJSONArray("det");
-        JSONObject jsonTotal = jsonInfNFe.getJSONObject("total");
-        JSONObject jsonPag = jsonInfNFe.getJSONObject("pag");
-        JSONArray jsonDetPag = jsonPag.getJSONArray("detPag");
-        JSONObject jsonInfProt = json.getJSONObject("infProt");
+        /*
+         * Meio de pagamento da venda:
+         * 01 = Dinheiro;
+         * 02 = Cheque;
+         * 03 = Cartão de crédito;
+         * 04 = Cartão de débito;
+         * 05 = Crédito loja;
+         * 10 = Vale alimentação;
+         * 11 = Vale refeição;
+         * 12 = Vale presente;
+         * 13 = Vale combustível;
+         * 14 = Duplicata mercantil;
+         * 15 = Boleto bancário;
+         * 90 = Sem pagamento;
+         * 99 = Outros.
+         */
+        Map<String, String> meioPagamento;
+        meioPagamento = new LinkedHashMap<>();
         
-        String serie = jsonIde.get("serie").toString();
-        String nNF = jsonIde.get("nNF").toString();
-        String dhEmi = jsonIde.get("dhEmi").toString();
+        meioPagamento.put("01", "Dinheiro");
+        meioPagamento.put("02", "Cheque");
+        meioPagamento.put("03", "Cartão de crédito");
+        meioPagamento.put("04", "Cartão de débito");
+        meioPagamento.put("05", "Crédito loja");
+        meioPagamento.put("10", "Vale alimentação");
+        meioPagamento.put("11", "Vale refeição");
+        meioPagamento.put("12", "Vale presente");
+        meioPagamento.put("13", "Vale combustível");
+        meioPagamento.put("14", "Duplicata mercantil");
+        meioPagamento.put("15", "Boleto bancário");
+        meioPagamento.put("90", "Sem pagamento");
+        meioPagamento.put("99", "Outros");
         
-        String emitCNPJ = jsonEmit.get("CNPJ").toString();
-        String emitXNome = jsonEmit.get("xNome").toString();
-        String emitXLgr = jsonEmit.get("xLgr").toString();
-        String emitNro = jsonEmit.get("nro").toString();
-        String emitXCpl = jsonEmit.get("xCpl").toString();
-        String emitXBairro = jsonEmit.get("xBairro").toString();
-        String emitXMun = jsonEmit.get("xMun").toString();
-        String emitUF = jsonEmit.get("UF").toString();
-        String emitCEP = jsonEmit.get("CEP").toString();
-        String emitXPais = jsonEmit.get("xPais").toString();
+        // Formatador de números.
+        NumberFormat numberFormat = NumberFormat.getNumberInstance(new Locale("pt", "BR"));
+        numberFormat.setMinimumFractionDigits(2);
+        numberFormat.setMaximumFractionDigits(2);
         
-        if (jsonDest.has("CPF")) {
-            String destCNPJ = jsonDest.get("CPF").toString();
-        } else if (jsonDest.has("CNPJ")) {
-            String destCNPJ = jsonDest.get("CNPJ").toString();
-        } else {
-            String destCNPJ = "";
+        try {
+            // Inicializa o acesso ao serviço de impressão.
+            PrintService printService = PrinterOutputStream.getPrintServiceByName(nomeImpressora);
+            PrinterOutputStream printerOutputStream = new PrinterOutputStream(printService);
+
+            // Cria o objeto de impressão ESC/POS.
+            EscPos escpos = new EscPos(printerOutputStream);
+
+            /*
+             * DANFE de 58mm de largura.
+             */
+            if (tamanhoPapel.equals("58")) {
+                // 0         1         2         3
+                // 0123456789012345678901234567890
+                // -------------------------------
+                //       CNPJ: 33630582000149
+                // Editora Roberto Luiz Souza Mont
+                //               eiro
+                // Rua Chile, s/n, Edifício Eduard
+                //      o De Moraes, sala 606
+                //      Centro, Salvador, BA
+                //   Documento Auxiliar da Nota
+                // Fiscal de Consumidor Eletrônica
+                // -------------------------------
+                // Código|Descrição
+                //    Qtde|UN |  Vl Unit| Vl Total
+                // 001|Banqueta plástica dobrável,
+                //     branca, altura 220 mm
+                //    1,00|PC |    56,08|    56,08
+                // 002|Jogo de cinta com catraca p
+                //     ara amarração de carga 0,8
+                //     tf/0,4 tf, CC 080
+                //    1,00|PC |    37,82|    75,64
+                // 003|Óleo de cambio manual SAE 8
+                //     0 W Flex Oil 1Lt
+                //    1,00|UN |    13,00|    13,00
+                // -------------------------------
+                //                     12345678901
+                // Qtde. total de itens          3
+                //               12345678901234567
+                // Valor total R$           144,72
+                //            12345678901234567890
+                // Desconto R$                1,30
+                //                 123456789012345
+                // Valor a Pagar R$         143,42
+                // FORMA PAGAMENTO   VALOR PAGO R$
+                //         12345678901234567890123
+                // Dinheiro                  50,00
+                //                  12345678901234
+                // Cartão de Crédito         40,00
+                //                 123456789012345
+                // Cartão de Débito         100,00
+                //         12345678901234567890123
+                // Troco R$                  46,58
+                // -------------------------------
+                //  Consulte pela Chave de Acesso
+                //  em https://sistemas.sefaz.am.g
+                //  ov.br/nfceweb-hom/formConsulta
+                //  .do
+                //  1323 0533 6305 8200 0149 6500
+                //    1000 0003 1810 0000 3193
+                // -------------------------------
+                // CONSUMIDOR - CPF: 40325635862 -
+                //     Andréia Rita da Silva
+                // -------------------------------
+                //    NFC-e n.: 318 Série: 1
+                //     2023-05-19 08:24:28
+                //
+                //  Protocolo de autorização:
+                //       113230010671996
+                //     Data de autorização:
+                //     2023-05-19 07:24:33
+                //
+                //    EMITIDA EM AMBIENTE DE
+                // HOMOLOGAÇÃO - SEM VALOR FISCAL
+                //
+                //        +--------------+
+                //        |              |
+                //        |              |
+                //        |              |
+                //        |              |
+                //        |              |
+                //        |              |
+                //        +--------------+
+                //
+                // -------------------------------
+                // Tributos Totais Incidentes (Lei
+                //  Federal 12.741/2012): R$73,27.
+                //  Trib aprox R$: 46,68 Fed, 26,5
+                // 9 Est e 0,00 Mun. Fonte: IBPT.
+
+                // Inicializa a impressora.
+                escpos.initializePrinter();
+                // Seleciona a página de código Latin-1.
+                escpos.setPrinterCharacterTable(3);
+
+                // Lê o objeto contendo os dados da NFC-e.
+                JSONObject jsonInfNFe = json.getJSONObject("infNFe");
+                JSONObject jsonIde = jsonInfNFe.getJSONObject("ide");
+                JSONObject jsonEmit = jsonInfNFe.getJSONObject("emit");
+                JSONObject jsonEnderEmit = jsonEmit.getJSONObject("enderEmit");
+                JSONObject jsonDest = jsonInfNFe.getJSONObject("dest");
+                JSONArray jsonDet = jsonInfNFe.getJSONArray("det");
+                JSONObject jsonTotal = jsonInfNFe.getJSONObject("total");
+                JSONObject jsonICMSTot = jsonTotal.getJSONObject("ICMSTot");
+                JSONObject jsonPag = jsonInfNFe.getJSONObject("pag");
+                JSONArray jsonDetPag = jsonPag.getJSONArray("detPag");
+                JSONObject jsonInfAdic = jsonInfNFe.getJSONObject("infAdic");
+                JSONObject jsonInfProt = json.getJSONObject("infProt");
+
+                // Dados do emitente.
+                String emitCNPJ = jsonEmit.get("CNPJ").toString();
+                String emitXNome = jsonEmit.get("xNome").toString();
+                String emitXLgr = jsonEnderEmit.get("xLgr").toString();
+                String emitNro = jsonEnderEmit.get("nro").toString();
+                String emitXCpl = jsonEnderEmit.get("xCpl").toString();
+                String emitXBairro = jsonEnderEmit.get("xBairro").toString();
+                String emitXMun = jsonEnderEmit.get("xMun").toString();
+                String emitUF = jsonEnderEmit.get("UF").toString();
+
+                // Imprime o cabeçalho do DANFE.
+                escpos.writeLF(StringUtils.center("CNPJ: " + formatarString(emitCNPJ, "##.###.###/####-##"), 31));
+                escpos.writeLF(StringUtils.abbreviate(emitXNome, 31));
+                escpos.writeLF(StringUtils.center(emitXLgr + ", " + emitNro, 31));
+                escpos.writeLF(StringUtils.center(emitXCpl, 31));
+                escpos.writeLF(StringUtils.center(emitXBairro + ", " + emitXMun + ", " + emitUF, 31));
+                escpos.writeLF(StringUtils.center("Documento Auxiliar da Nota", 31));
+                escpos.writeLF(StringUtils.center("Fiscal de Consumidor Eletrônica", 31));
+                escpos.writeLF("-------------------------------");
+                escpos.writeLF("Código|Descrição");
+                escpos.writeLF("   Qtde|UN |  Vl Unit| Vl Total");
+                
+                // Dados da autorização.
+                String tpAmb = jsonInfProt.get("tpAmb").toString();
+                String tpEmis = jsonInfProt.get("tpEmis").toString();
+                String chNFe = jsonInfProt.get("chNFe").toString();
+                String dhRecbto = jsonInfProt.get("dhRecbto").toString();
+                String nProt = jsonInfProt.get("nProt").toString();
+                String urlChave = jsonInfProt.get("urlChave").toString();
+                String qrCode = jsonInfProt.get("qrCode").toString();
+
+                // Produtos constantes da nota.
+                int numeroProdutos = jsonDet.length();
+                for (int i = 0; i < numeroProdutos; i++) {
+                    JSONObject itemDet = jsonDet.getJSONObject(i);
+                    JSONObject jsonProd = itemDet.getJSONObject("prod");
+                    
+                    String cProd = jsonProd.get("cProd").toString();
+                    String xProd;
+                    if (tpAmb.equals("2")) {
+                        xProd = "NOTA FISCAL EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL";
+                    } else {
+                        xProd = jsonProd.get("xProd").toString();
+                    }
+                    String qCom = jsonProd.get("qCom").toString();
+                    String uCom = jsonProd.get("uCom").toString();
+                    String vUnCom = jsonProd.get("vUnCom").toString();
+                    String vProd = jsonProd.get("vProd").toString();
+                    
+                    escpos.writeLF(StringUtils.leftPad(cProd, 3, "0") + "|" + StringUtils.abbreviate(xProd, 27));
+                    escpos.writeLF(StringUtils.leftPad(numberFormat.format(Float.parseFloat(qCom)), 7) + "|" + StringUtils.rightPad(uCom, 3) + "|" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vUnCom)), 9) + "|" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vProd)), 9));
+                }
+
+                // Totais da nota.
+                String vProd = jsonICMSTot.get("vProd").toString();
+                String vDesc = jsonICMSTot.get("vDesc").toString();
+                String vNF = jsonICMSTot.get("vNF").toString();
+                escpos.writeLF("-------------------------------");
+                escpos.writeLF("Qtde. total de itens" + StringUtils.leftPad(String.valueOf(numeroProdutos), 11));
+                escpos.writeLF("Valor total R$" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vProd)), 17));
+                escpos.writeLF("Desconto R$" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vDesc)), 20));
+                escpos.writeLF("Valor a Pagar R$" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vNF)), 15));;
+                escpos.writeLF("FORMA PAGAMENTO   VALOR PAGO R$");
+
+                // Meios de pagamento.
+                for (int i = 0; i < jsonDetPag.length(); i++) {
+                    JSONObject jsonItemDetPag = jsonDetPag.getJSONObject(i);
+                    String tPag = meioPagamento.get(jsonItemDetPag.get("tPag").toString());
+                    String vPag = jsonItemDetPag.get("vPag").toString();
+                    
+                    escpos.writeLF(tPag + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vPag)), 31 - tPag.length()));
+                }
+
+                // Valor do troco.
+                String vTroco = jsonPag.get("vTroco").toString();
+                escpos.writeLF("Troco R$" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vTroco)), 23));
+                escpos.writeLF("-------------------------------");
+                escpos.writeLF(StringUtils.center("Consulte pela Chave de Acesso em " + urlChave, 31));
+                escpos.writeLF(StringUtils.center(formataChaveNFe(chNFe), 31));
+                escpos.writeLF("-------------------------------");
+                
+                // Dados do consumidor.
+                String destCNPJ;
+                if (jsonDest.has("CPF")) {
+                    destCNPJ = " - CPF: " + formatarString(jsonDest.get("CPF").toString(), "###.###.###-##");
+                } else if (jsonDest.has("CNPJ")) {
+                    destCNPJ = " - CNPJ: " + formatarString(jsonDest.get("CNPJ").toString(), "##.###.###/####-##");
+                } else {
+                    destCNPJ = " NÃO IDENTIFICADO";
+                }
+                String destXNome;
+                if (jsonDest.has("xNome")) {
+                    destXNome = " - " + jsonDest.get("xNome").toString();
+                } else {
+                    destXNome = "";
+                }
+                escpos.writeLF(StringUtils.center("CONSUMIDOR" + destCNPJ + destXNome, 31));
+                escpos.writeLF("-------------------------------");
+                
+                // Dados da NF-e.
+                String serie = jsonIde.get("serie").toString();
+                String nNF = jsonIde.get("nNF").toString();
+                String dhEmi = jsonIde.get("dhEmi").toString();
+
+                escpos.writeLF(StringUtils.center("NFC-e n.: " + nNF + " Série: " + serie, 31));
+                escpos.writeLF(StringUtils.center(dhEmi, 31));
+                escpos.writeLF("");
+                
+                escpos.writeLF(StringUtils.center("Protocolo de autorização:", 31));
+                escpos.writeLF(StringUtils.center(nProt, 31));
+                escpos.writeLF(StringUtils.center("Data de autorização:", 31));
+                escpos.writeLF(StringUtils.center(formataDataNFe(dhRecbto), 31));
+                escpos.writeLF("");
+                if (tpAmb.equals("2")) {
+                    escpos.writeLF(StringUtils.center("EMITIDA EM AMBIENTE DE", 31));
+                    escpos.writeLF(StringUtils.center("HOMOLOGAÇÃO - SEM VALOR FISCAL", 31));
+                    escpos.writeLF("");
+                }
+                
+                // Imprime o QR Code.
+                QRCode qrcode = new QRCode();
+                qrcode.setSize(6);
+                qrcode.setJustification(EscPosConst.Justification.Center);
+                escpos.write(qrcode, qrCode);
+                
+                // Informações complementares.
+                String infCpl = jsonInfAdic.get("infCpl").toString();
+                escpos.writeLF("-------------------------------");
+                escpos.writeLF(infCpl);
+                
+                // Corta o papel se a impressora suportar.
+                escpos.feed(5).cut(EscPos.CutMode.FULL);
+                escpos.close();
+                
+            }
+        } catch (Exception e) {
+            System.out.println(e.toString());
+            
+            return 0;
         }
-        
-        if (jsonDest.has("xNome")) {
-            String destXNome = jsonDest.get("xNome").toString();
-        } else {
-            String destXNome = "";
-        }
-        
-        String tpAmb = jsonIde.get("tpAmb").toString();
-        String tpEmis = jsonIde.get("tpEmis").toString();
-        String chNFe = jsonIde.get("chNFe").toString();
-        String dhRecbto = jsonIde.get("dhRecbto").toString();
-        String nProt = jsonIde.get("nProt").toString();
-        String urlChave = jsonIde.get("urlChave").toString();
-        String qrCode = jsonIde.get("qrCode").toString();
         
         return 1;
     }
@@ -618,7 +931,7 @@ public class NFCeMonitor {
             }
             
             // Preenche os dados do Produto da NFC-e e adiciona à lista de produtos.
-            for(int i = 0; i < jsonDet.length(); i++){
+            for (int i = 0; i < jsonDet.length(); i++) {
                 JSONObject itemDet = jsonDet.getJSONObject(i);
 
                 JSONObject jsonProd = itemDet.getJSONObject("prod");
@@ -1214,7 +1527,7 @@ public class NFCeMonitor {
             // Preenche dados dos Pagamentos.
             Pag pag = new Pag();
 
-            for(int i = 0; i < jsonDetPag.length(); i++){
+            for (int i = 0; i < jsonDetPag.length(); i++) {
                 JSONObject jsonItemDetPag = jsonDetPag.getJSONObject(i);
                 Pag.DetPag detPag = new Pag.DetPag();
                 if (jsonItemDetPag.has("indPag")) {
@@ -1344,7 +1657,7 @@ public class NFCeMonitor {
                             jsonInfProt.put("xMotivo", xMotivo);
                             json.put("infProt", jsonInfProt);
                             
-                            //imprimeDANFE(json, nomeImpressora, tamanhoPapel);
+                            imprimeDANFE(json, nomeImpressora, tamanhoPapel);
                             System.out.println(json.toString());
                         }
                         
@@ -1383,7 +1696,7 @@ public class NFCeMonitor {
                             jsonInfProt.put("xMotivo", xMotivo);
                             json.put("infProt", jsonInfProt);
                             
-                            //imprimeDANFE(json, nomeImpressora, tamanhoPapel);
+                            imprimeDANFE(json, nomeImpressora, tamanhoPapel);
                             System.out.println(json.toString());
                         }
                         
@@ -1466,7 +1779,7 @@ public class NFCeMonitor {
                             jsonInfProt.put("xMotivo", xMotivo);
                             json.put("infProt", jsonInfProt);
                             
-                            //imprimeDANFE(json, nomeImpressora, tamanhoPapel);
+                            imprimeDANFE(json, nomeImpressora, tamanhoPapel);
                             System.out.println(json.toString());
                         }
                     } catch (Exception error) {

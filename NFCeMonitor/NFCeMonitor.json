@@ -2,7 +2,6 @@
     "porta": "3434",
     "webserviceUF": "AM",
     "webserviceAmbiente": 2,
-    "emitenteUF": "BA",
     "CSC": "0123456789",
     "idToken": "000001",
     "caminhoSchemas": "/home/roberto/schemas/",
