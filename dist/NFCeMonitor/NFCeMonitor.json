@@ -2,12 +2,15 @@
     "porta": "3434",
     "webserviceUF": "AM",
     "webserviceAmbiente": 2,
-    "emitenteUF": "BA",
     "CSC": "0123456789",
     "idToken": "000001",
     "caminhoSchemas": "/home/roberto/schemas/",
     "caminhoCertificado": "/home/roberto/certificados/33630582000149.pfx",
     "senhaCertificado": "1234",
     "caminhoXML": "/home/roberto/xml",
+    "imprimirDANFE": "1",
+    "nomeImpressora": "MiniThermalPrinter",
+    "tamanhoPapel": "58",
+    "habilitarServicoImpressao": "1",
     "simularContingencia": "0"
 }
