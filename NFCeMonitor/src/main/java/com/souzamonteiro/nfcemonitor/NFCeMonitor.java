@@ -260,10 +260,10 @@ public class NFCeMonitor {
      * 
      * @param   json            Dados da NF-e.
      * @param   nomeImpressora  Nome da impressora ESC/POS.
-     * @param   tamanhoPapel    Tamanho do papel (58mm ou 80mm).
+     * @param   numeroColunas   Tamanho do papel (58mm ou 80mm).
      * @return                  Map contendo os parâmetros passados na URL.
      */
-    private static int imprimeDANFE(JSONObject json, String nomeImpressora, String tamanhoPapel) {
+    private static int imprimeDANFE(JSONObject json, String nomeImpressora, String numeroColunas) {
         System.out.println(json.toString());
         
         /*
@@ -304,6 +304,8 @@ public class NFCeMonitor {
         numberFormat.setMinimumFractionDigits(2);
         numberFormat.setMaximumFractionDigits(2);
         
+        int caracteresLinha = Integer.parseInt(numeroColunas);
+        
         try {
             // Inicializa o acesso ao serviço de impressão.
             PrintService printService = PrinterOutputStream.getPrintServiceByName(nomeImpressora);
@@ -312,14 +314,8 @@ public class NFCeMonitor {
             // Cria o objeto de impressão ESC/POS.
             EscPos escpos = new EscPos(printerOutputStream);
 
-            // DANFE de 58mm de largura.
-            int caracteresLinha = 32;
-            int deslocamentoCaracteres = 0;
-            if (tamanhoPapel.equals("80")) {
-                // O papel de 58mm permite imprimir até 32 caracteres por linha.
-                // O papel de 80mm permite imprimir até 40 caracteres por linha.
-                caracteresLinha = 48;
-            }
+            // O papel de 58mm permite imprimir 30, 32 ou 40 caracteres (colunas) por linha.
+            // O papel de 80mm permite imprimir 42 ou 56 caracteres (colunas) por linha.
             
             // Layout 58mm:
             //
@@ -332,12 +328,13 @@ public class NFCeMonitor {
             // Rua Chile, s/n, Edifício Eduardo
             //       De Moraes, sala 606
             //      Centro, Salvador, BA
-            //   Documento Auxiliar da Nota
-            // Fiscal de Consumidor Eletrônica
+            //      Documento Auxiliar da
+            //         Nota Fiscal de
+            //      Consumidor Eletrônica
             // --------------------------------
-            //   Código|Descrição
-            //     Qtde|UN |  Vl Unit| Vl Total
-            // 1234567 123456789012345678901234
+            // Código  |Descrição
+            // Qtde    |UN |  Vl Unit| Vl Total
+            // 12345678 123456789012345678901234
             // 00000001|Banqueta plástica dobrá
             // vel, branca, altura 220 mm
             // 12345678 123 123456789 123456789
@@ -399,16 +396,18 @@ public class NFCeMonitor {
             //
             // 0         1         2         3         4
             // 012345678901234567890123456789012345678901234567
-            //        Documento Auxiliar da Nota Fiscal 
-            //            de Consumidor Eletrônica
+            //              Documento Auxiliar da
+            //                  Nota Fiscal de
+            //              Consumidor Eletrônica
             // ------------------------------------------------
-            //         Código|Descrição
-            //           Qtde|UN |       Vl Unit|      Vl Total
-            // 12345678901234 123456789012345678901234567890123
-            // 00000000000001|Banqueta plástica dobrável, branc
-            // a, altura 220 mm
-            // 12345678901234 123 12345678901234 12345678901234
-            //           1,00|PC |         56,08|         56,08
+            // Código  |Descrição
+            // Qtde    |UN |         Vl Unit|          Vl Total
+            // 12345678 123456789012345678901234567890123456789
+            // 00000001|Banqueta plástica dobrável, branca, alt
+            // ura 220 mm
+            // 123456789012
+            // 12345678 123 12345678901234567 12345678901234567
+            //     1,00|PC |            56,08|            56,08
             // ------------------------------------------------
             // 0         1         2         3
             // 0         1         2         3         4
@@ -417,6 +416,7 @@ public class NFCeMonitor {
             // Valor total R$                            144,72 tam = 14
             // Desconto R$                                 1,30 tam = 11
             // Valor a Pagar R$                          143,42 tam = 16
+            // 123456789012345
             // FORMA PAGAMENTO                    VALOR PAGO R$
             // Dinheiro                                   50,00 tam = tamanho("Dinheiro")
             // Cartão de Crédito                          40,00 tam = tamanho("Cartão de Crédito")
@@ -463,21 +463,7 @@ public class NFCeMonitor {
             escpos.writeLF(StringUtils.center(emitXCpl, caracteresLinha));
             escpos.writeLF(StringUtils.center(emitXBairro + ", " + emitXMun + ", " + emitUF, caracteresLinha));
             
-            // 0         1         2         3
-            // 0123456789012345678901234567890
-            //   Documento Auxiliar da Nota
-            // Fiscal de Consumidor Eletrônica
-            if (tamanhoPapel.equals("58")) {
-                escpos.writeLF(StringUtils.center("Documento Auxiliar da Nota", caracteresLinha));
-                escpos.writeLF(StringUtils.center("Fiscal de Consumidor Eletrônica", caracteresLinha));
-            // 0         1         2         3
-            // 0123456789012345678901234567890123456789
-            //    Documento Auxiliar da Nota Fiscal 
-            //        de Consumidor Eletrônica
-            } else {
-                escpos.writeLF(StringUtils.center("Documento Auxiliar da Nota Fiscal", caracteresLinha));
-                escpos.writeLF(StringUtils.center("de Consumidor Eletrônica", caracteresLinha));
-            }
+            escpos.writeLF(StringUtils.center("Documento Auxiliar da Nota Fiscal de Consumidor Eletrônica", caracteresLinha));
             
             // Dados da autorização.
             String tpAmb = jsonInfProt.get("tpAmb").toString();
@@ -493,17 +479,10 @@ public class NFCeMonitor {
                 escpos.writeLF(StringUtils.center("Pendente de autorização", caracteresLinha));
             }
             
-            // Código|Descrição
-            //   Qtde|UN |       Vl Unit|      Vl Total
-            if (tamanhoPapel.equals("58")) {
-                escpos.writeLF("--------------------------------");
-                escpos.writeLF("  Código|Descrição");
-                escpos.writeLF("    Qtde|UN |  Vl Unit| Vl Total");
-            } else {
-                escpos.writeLF("------------------------------------------------");
-                escpos.writeLF("        Código|Descrição");
-                escpos.writeLF("          Qtde|UN |       Vl Unit|      Vl Total");
-            }
+            escpos.writeLF(StringUtils.rightPad("-", caracteresLinha, "-"));
+            
+            escpos.writeLF(StringUtils.rightPad("Código", 8) + "|" + StringUtils.rightPad("Descrição", caracteresLinha - 9));
+            escpos.writeLF(StringUtils.rightPad( "Qtde", 8) + "|" + StringUtils.rightPad("UN", 3) + "|" + StringUtils.leftPad("Vl Unit", (caracteresLinha - 14) / 2) + "|" + StringUtils.leftPad("Vl Total", (caracteresLinha - 14) / 2));
             
             // Produtos constantes da nota.
             int numeroProdutos = jsonDet.length();
@@ -523,8 +502,8 @@ public class NFCeMonitor {
                 String vUnCom = jsonProd.get("vUnCom").toString();
                 String vProduto = jsonProd.get("vProd").toString();
                 
-                escpos.writeLF(StringUtils.leftPad(cProd, tamanhoPapel.equals("58") ? 8 : 14, "0") + "|" + StringUtils.abbreviate(xProd, caracteresLinha - (tamanhoPapel.equals("58") ? 9 : 15)));
-                escpos.writeLF(StringUtils.leftPad(numberFormat.format(Float.parseFloat(qCom)), tamanhoPapel.equals("58") ? 8 : 14) + "|" + StringUtils.rightPad(uCom, 3) + "|" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vUnCom)), tamanhoPapel.equals("58") ? 9 : 14) + "|" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vProduto)), tamanhoPapel.equals("58") ? 9 : 14));
+                escpos.writeLF(StringUtils.leftPad(cProd, 8, "0") + "|" + StringUtils.abbreviate(xProd, caracteresLinha - 9));
+                escpos.writeLF(StringUtils.leftPad( numberFormat.format(Float.parseFloat(qCom)), 8) + "|" + StringUtils.rightPad(uCom, 3) + "|" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vUnCom)), (caracteresLinha - 14) / 2) + "|" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vProduto)), (caracteresLinha - 14) / 2));
             }
 
             // Totais da nota.
@@ -532,22 +511,14 @@ public class NFCeMonitor {
             String vDesc = jsonICMSTot.get("vDesc").toString();
             String vNF = jsonICMSTot.get("vNF").toString();
             
-            if (tamanhoPapel.equals("58")) {
-                escpos.writeLF("--------------------------------");
-            } else {
-                escpos.writeLF("------------------------------------------------");
-            }
+            escpos.writeLF(StringUtils.rightPad("-", caracteresLinha, "-"));
             
             escpos.writeLF("Qtde. total de itens" + StringUtils.leftPad(String.valueOf(numeroProdutos), caracteresLinha - 20));
             escpos.writeLF("Valor total R$" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vProd)), caracteresLinha - 14));
             escpos.writeLF("Desconto R$" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vDesc)), caracteresLinha - 11));
             escpos.writeLF("Valor a Pagar R$" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vNF)), caracteresLinha - 16));
             
-            if (tamanhoPapel.equals("58")) {
-                escpos.writeLF("FORMA PAGAMENTO    VALOR PAGO R$");
-            } else {
-                escpos.writeLF("FORMA PAGAMENTO                    VALOR PAGO R$");
-            }
+            escpos.writeLF("FORMA PAGAMENTO" + StringUtils.leftPad("VALOR PAGO R$", caracteresLinha - 15));
             
             // Meios de pagamento.
             for (int i = 0; i < jsonDetPag.length(); i++) {
@@ -567,20 +538,16 @@ public class NFCeMonitor {
             }
             escpos.writeLF("Troco R$" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vTroco)), caracteresLinha - 8));
             
-            if (tamanhoPapel.equals("58")) {
-                escpos.writeLF("--------------------------------");
-            } else {
-                escpos.writeLF("------------------------------------------------");
-            }
+            
+            escpos.writeLF(StringUtils.rightPad("-", caracteresLinha, "-"));
+            
             
             escpos.writeLF(StringUtils.center("Consulte pela Chave de Acesso em " + urlChave, caracteresLinha));
             escpos.writeLF(StringUtils.center(formataChaveNFe(chNFe), caracteresLinha));
             
-            if (tamanhoPapel.equals("58")) {
-                escpos.writeLF("--------------------------------");
-            } else {
-                escpos.writeLF("------------------------------------------------");
-            }
+            
+            escpos.writeLF(StringUtils.rightPad("-", caracteresLinha, "-"));
+            
             
             // Dados do consumidor.
             String destCNPJ;
@@ -599,11 +566,8 @@ public class NFCeMonitor {
             }
             escpos.writeLF(StringUtils.center("CONSUMIDOR" + destCNPJ + destXNome, caracteresLinha));
             
-            if (tamanhoPapel.equals("58")) {
-                escpos.writeLF("--------------------------------");
-            } else {
-                escpos.writeLF("------------------------------------------------");
-            }
+            
+            escpos.writeLF(StringUtils.rightPad("-", caracteresLinha, "-"));
             
             // Dados da NF-e.
             String serie = jsonIde.get("serie").toString();
@@ -612,27 +576,25 @@ public class NFCeMonitor {
 
             escpos.writeLF(StringUtils.center("NFC-e n.: " + nNF + " Série: " + serie, caracteresLinha));
             escpos.writeLF(StringUtils.center(dhEmi, caracteresLinha));
-            escpos.writeLF("");
             
             if (tpEmis.equals("1")) {
                 escpos.writeLF(StringUtils.center("Protocolo de autorização:", caracteresLinha));
                 escpos.writeLF(StringUtils.center(nProt, caracteresLinha));
                 escpos.writeLF(StringUtils.center("Data de autorização:", caracteresLinha));
                 escpos.writeLF(StringUtils.center(formataDataNFe(dhRecbto), caracteresLinha));
-                escpos.writeLF("");
             } else {
                 escpos.writeLF(StringUtils.center("Via consumidor", caracteresLinha));
                 escpos.writeLF(StringUtils.center("EMITIDA EM CONTINGÊNCIA", caracteresLinha));
                 escpos.writeLF(StringUtils.center("Pendente de autorização", caracteresLinha));
-                escpos.writeLF("");
             }
             
             if (tpAmb.equals("2")) {
                 escpos.writeLF(StringUtils.center("EMITIDA EM AMBIENTE DE", caracteresLinha));
                 escpos.writeLF(StringUtils.center("HOMOLOGAÇÃO - SEM VALOR FISCAL", caracteresLinha));
-                escpos.writeLF("");
             }
-
+            
+            escpos.writeLF("");
+            
             // Imprime o QR Code.
             QRCode qrcode = new QRCode();
             qrcode.setSize(6);
@@ -640,11 +602,8 @@ public class NFCeMonitor {
             escpos.write(qrcode, qrCode);
 
             // Informações complementares.
-            if (tamanhoPapel.equals("58")) {
-                escpos.writeLF("--------------------------------");
-            } else {
-                escpos.writeLF("------------------------------------------------");
-            }
+            
+            escpos.writeLF(StringUtils.rightPad("-", caracteresLinha, "-"));
             
             String infCpl = jsonInfAdic.get("infCpl").toString();
             escpos.writeLF(infCpl);
@@ -660,27 +619,14 @@ public class NFCeMonitor {
                 escpos.writeLF(StringUtils.center(emitXCpl, caracteresLinha));
                 escpos.writeLF(StringUtils.center(emitXBairro + ", " + emitXMun + ", " + emitUF, caracteresLinha));
 
-                if (tamanhoPapel.equals("58")) {
-                    escpos.writeLF(StringUtils.center("Documento Auxiliar da Nota", caracteresLinha));
-                    escpos.writeLF(StringUtils.center("Fiscal de Consumidor Eletrônica", caracteresLinha));
-                } else {
-                    escpos.writeLF(StringUtils.center("Documento Auxiliar da Nota Fiscal", caracteresLinha));
-                    escpos.writeLF(StringUtils.center("de Consumidor Eletrônica", caracteresLinha));
-                }
+                escpos.writeLF(StringUtils.center("Documento Auxiliar da Nota Fiscal de Consumidor Eletrônica", caracteresLinha));
                 
                 escpos.writeLF(StringUtils.center("EMITIDA EM CONTINGÊNCIA", caracteresLinha));
                 escpos.writeLF(StringUtils.center("Pendente de autorização", caracteresLinha));
 
-                if (tamanhoPapel.equals("58")) {
-                    escpos.writeLF("--------------------------------");
-                    escpos.writeLF("  Código|Descrição");
-                    escpos.writeLF("    Qtde|UN |  Vl Unit| Vl Total");
-                } else {
-                    escpos.writeLF("------------------------------------------------");
-                    escpos.writeLF("        Código|Descrição");
-                    escpos.writeLF("          Qtde|UN |       Vl Unit|      Vl Total");
-                }
-
+                escpos.writeLF(StringUtils.rightPad("Código", 8) + "|" + StringUtils.rightPad("Descrição", caracteresLinha - 9));
+                escpos.writeLF(StringUtils.rightPad( "Qtde", 8) + "|" + StringUtils.rightPad("UN", 3) + "|" + StringUtils.leftPad("Vl Unit", (caracteresLinha - 14) / 2) + "|" + StringUtils.leftPad("Vl Total", (caracteresLinha - 14) / 2));
+                
                 // Produtos constantes da nota.
                 for (int i = 0; i < numeroProdutos; i++) {
                     JSONObject itemDet = jsonDet.getJSONObject(i);
@@ -698,28 +644,21 @@ public class NFCeMonitor {
                     String vUnCom = jsonProd.get("vUnCom").toString();
                     String vProduto = jsonProd.get("vProd").toString();
                     
-                    escpos.writeLF(StringUtils.leftPad(cProd, tamanhoPapel.equals("58") ? 8 : 14, "0") + "|" + StringUtils.abbreviate(xProd, caracteresLinha - (tamanhoPapel.equals("58") ? 9 : 15)));
-                escpos.writeLF(StringUtils.leftPad(numberFormat.format(Float.parseFloat(qCom)), tamanhoPapel.equals("58") ? 8 : 14) + "|" + StringUtils.rightPad(uCom, 3) + "|" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vUnCom)), tamanhoPapel.equals("58") ? 9 : 14) + "|" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vProduto)), tamanhoPapel.equals("58") ? 9 : 14));
+                    escpos.writeLF(StringUtils.leftPad(cProd, 8, "0") + "|" + StringUtils.abbreviate(xProd, caracteresLinha - 9));
+                    escpos.writeLF(StringUtils.leftPad( numberFormat.format(Float.parseFloat(qCom)), 8) + "|" + StringUtils.rightPad(uCom, 3) + "|" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vUnCom)), (caracteresLinha - 14) / 2) + "|" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vProduto)), (caracteresLinha - 14) / 2));
                 }
 
                 // Totais da nota.
-                if (tamanhoPapel.equals("58")) {
-                    escpos.writeLF("--------------------------------");
-                } else {
-                    escpos.writeLF("------------------------------------------------");
-                }
-
+                
+                escpos.writeLF(StringUtils.rightPad("-", caracteresLinha, "-"));
+                
                 escpos.writeLF("Qtde. total de itens" + StringUtils.leftPad(String.valueOf(numeroProdutos), caracteresLinha - 20));
                 escpos.writeLF("Valor total R$" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vProd)), caracteresLinha - 14));
                 escpos.writeLF("Desconto R$" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vDesc)), caracteresLinha - 11));
                 escpos.writeLF("Valor a Pagar R$" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vNF)), caracteresLinha - 16));
 
-                if (tamanhoPapel.equals("58")) {
-                    escpos.writeLF("FORMA PAGAMENTO    VALOR PAGO R$");
-                } else {
-                    escpos.writeLF("FORMA PAGAMENTO                    VALOR PAGO R$");
-                }
-
+                escpos.writeLF("FORMA PAGAMENTO" + StringUtils.leftPad("VALOR PAGO R$", caracteresLinha - 15));
+                
                 // Meios de pagamento.
                 for (int i = 0; i < jsonDetPag.length(); i++) {
                     JSONObject jsonItemDetPag = jsonDetPag.getJSONObject(i);
@@ -732,55 +671,45 @@ public class NFCeMonitor {
                 // Valor do troco.
                 escpos.writeLF("Troco R$" + StringUtils.leftPad(numberFormat.format(Float.parseFloat(vTroco)), caracteresLinha - 8));
 
-                if (tamanhoPapel.equals("58")) {
-                    escpos.writeLF("--------------------------------");
-                } else {
-                    escpos.writeLF("------------------------------------------------");
-                }
+                
+                escpos.writeLF(StringUtils.rightPad("-", caracteresLinha, "-"));
+
 
                 escpos.writeLF(StringUtils.center("Consulte pela Chave de Acesso em " + urlChave, caracteresLinha));
                 escpos.writeLF(StringUtils.center(formataChaveNFe(chNFe), caracteresLinha));
 
-                if (tamanhoPapel.equals("58")) {
-                    escpos.writeLF("--------------------------------");
-                } else {
-                    escpos.writeLF("------------------------------------------------");
-                }
+                
+                escpos.writeLF(StringUtils.rightPad("-", caracteresLinha, "-"));
+
 
                 // Dados do consumidor.
                 escpos.writeLF(StringUtils.center("CONSUMIDOR" + destCNPJ + destXNome, caracteresLinha));
 
-                if (tamanhoPapel.equals("58")) {
-                    escpos.writeLF("--------------------------------");
-                } else {
-                    escpos.writeLF("------------------------------------------------");
-                }
+                
+                escpos.writeLF(StringUtils.rightPad("-", caracteresLinha, "-"));
+
 
                 // Dados da NF-e.
                 escpos.writeLF(StringUtils.center("NFC-e n.: " + nNF + " Série: " + serie, caracteresLinha));
                 escpos.writeLF(StringUtils.center(dhEmi, caracteresLinha));
-                escpos.writeLF("");
 
                 escpos.writeLF(StringUtils.center("Via estabelecimento", caracteresLinha));
                 escpos.writeLF(StringUtils.center("EMITIDA EM CONTINGÊNCIA", caracteresLinha));
                 escpos.writeLF(StringUtils.center("Pendente de autorização", caracteresLinha));
-                escpos.writeLF("");
 
                 if (tpAmb.equals("2")) {
                     escpos.writeLF(StringUtils.center("EMITIDA EM AMBIENTE DE", caracteresLinha));
                     escpos.writeLF(StringUtils.center("HOMOLOGAÇÃO - SEM VALOR FISCAL", caracteresLinha));
-                    escpos.writeLF("");
                 }
-
+                
+                escpos.writeLF("");
+                
                 // Imprime o QR Code.
                 escpos.write(qrcode, qrCode);
 
                 // Informações complementares.
-                if (tamanhoPapel.equals("58")) {
-                    escpos.writeLF("--------------------------------");
-                } else {
-                    escpos.writeLF("------------------------------------------------");
-                }
+                
+                escpos.writeLF(StringUtils.rightPad("-", caracteresLinha, "-"));
 
                 escpos.writeLF(infCpl);
 
@@ -813,15 +742,15 @@ public class NFCeMonitor {
             
             String habilitarServicoImpressao = "0";
             String nomeImpressora = "";
-            String tamanhoPapel = "58";
+            String numeroColunas = "58";
             if (configuracoes.has("habilitarServicoImpressao")) {
                 habilitarServicoImpressao = configuracoes.get("habilitarServicoImpressao").toString();
             }
             if (configuracoes.has("nomeImpressora")) {
                 nomeImpressora = configuracoes.get("nomeImpressora").toString();
             }
-            if (configuracoes.has("tamanhoPapel")) {
-                tamanhoPapel = configuracoes.get("tamanhoPapel").toString();
+            if (configuracoes.has("numeroColunas")) {
+                numeroColunas = configuracoes.get("numeroColunas").toString();
             }
             
             InputStream inputStream = httpExchange.getRequestBody(); 
@@ -848,7 +777,7 @@ public class NFCeMonitor {
                     cStat = "100";
                     xMotivo = "Sucesso";
                     
-                    if(imprimeDANFE(json, nomeImpressora, tamanhoPapel) != 1) {
+                    if(imprimeDANFE(json, nomeImpressora, numeroColunas) != 1) {
                         cStat = "000";
                         xMotivo = "Ocorreu um erro ao tentar imprimir o DANFE";
                     }
@@ -1000,15 +929,15 @@ public class NFCeMonitor {
             String simularContingencia = "0";
             String imprimirDANFE = "0";
             String nomeImpressora = "";
-            String tamanhoPapel = "58";
+            String numeroColunas = "58";
             if (configuracoes.has("imprimirDANFE")) {
                 imprimirDANFE = configuracoes.get("imprimirDANFE").toString();
             }
             if (configuracoes.has("nomeImpressora")) {
                 nomeImpressora = configuracoes.get("nomeImpressora").toString();
             }
-            if (configuracoes.has("tamanhoPapel")) {
-                tamanhoPapel = configuracoes.get("tamanhoPapel").toString();
+            if (configuracoes.has("numeroColunas")) {
+                numeroColunas = configuracoes.get("numeroColunas").toString();
             }
             if (configuracoes.has("simularContingencia")) {
                 simularContingencia = configuracoes.get("simularContingencia").toString();
@@ -1980,7 +1909,7 @@ public class NFCeMonitor {
                             jsonInfProt.put("xMotivo", xMotivo);
                             json.put("infProt", jsonInfProt);
                             
-                            imprimeDANFE(json, nomeImpressora, tamanhoPapel);
+                            imprimeDANFE(json, nomeImpressora, numeroColunas);
                         }
                         
                         System.out.println("Protocolo: " + nProt);
@@ -2018,7 +1947,7 @@ public class NFCeMonitor {
                             jsonInfProt.put("xMotivo", xMotivo);
                             json.put("infProt", jsonInfProt);
                             
-                            imprimeDANFE(json, nomeImpressora, tamanhoPapel);
+                            imprimeDANFE(json, nomeImpressora, numeroColunas);
                         }
                         
                         System.out.println("Protocolo: " + nProt);
@@ -2100,7 +2029,7 @@ public class NFCeMonitor {
                             jsonInfProt.put("xMotivo", xMotivo);
                             json.put("infProt", jsonInfProt);
                             
-                            imprimeDANFE(json, nomeImpressora, tamanhoPapel);
+                            imprimeDANFE(json, nomeImpressora, numeroColunas);
                         }
                     } catch (Exception error) {
                         System.out.println(error.getMessage());
