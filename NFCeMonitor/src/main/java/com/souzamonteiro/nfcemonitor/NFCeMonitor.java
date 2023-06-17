@@ -1334,7 +1334,7 @@ public class NFCeMonitor {
 
                 // Preenche os dados do Imposto.
                 Imposto imposto = new Imposto();
-
+                
                 ICMS icms = new ICMS();
 
                 if (jsonICMS.has("ICMS00")) {
@@ -1691,6 +1691,10 @@ public class NFCeMonitor {
                     }
                     icms.setICMSSN900(icmsSN900);
                 }
+                
+                String vTotTrib = jsonImposto.get("vTotTrib").toString();
+                
+                imposto.getContent().add(new ObjectFactory().createTNFeInfNFeDetImpostoVTotTrib(vTotTrib)); 
                 
                 JAXBElement<ICMS> icmsElement = new JAXBElement<ICMS>(new QName("ICMS"), ICMS.class, icms);
                 imposto.getContent().add(icmsElement);

@@ -9,8 +9,8 @@
     "senhaCertificado": "1234",
     "caminhoXML": "/home/roberto/xml",
     "imprimirDANFE": "1",
-    "nomeImpressora": "WP100",
-    "numeroColunas": "48",
+    "nomeImpressora": "MiniThermalPrinter",
+    "numeroColunas": "32",
     "habilitarServicoImpressao": "1",
     "simularContingencia": "0"
 }
