@@ -870,7 +870,7 @@ public class NFCeMonitor {
             
             try {
                 // Consulta o status do serviço.
-                TRetConsStatServ retorno = Nfe.statusServico(config, DocumentoEnum.NFE);
+                TRetConsStatServ retorno = Nfe.statusServico(config, DocumentoEnum.NFCE);
                 
                 cStat = retorno.getCStat();
                 xMotivo = retorno.getXMotivo();
@@ -1873,7 +1873,7 @@ public class NFCeMonitor {
 
                     // Realiza a consulta diversas vezes.
                     while (tentativa < 10) {
-                        retornoNfe = Nfe.consultaRecibo(config, recibo, DocumentoEnum.NFE);
+                        retornoNfe = Nfe.consultaRecibo(config, recibo, DocumentoEnum.NFCE);
                         if (retornoNfe.getCStat().equals(StatusEnum.LOTE_EM_PROCESSAMENTO.getCodigo())) {
                             System.out.println("INFO: Lote Em Processamento, vai tentar novamente apos 1 Segundo.");
                             Thread.sleep(1000);
@@ -2149,7 +2149,7 @@ public class NFCeMonitor {
             
             try {
                 // Envia a consulta.
-                TRetConsSitNFe retorno = Nfe.consultaXml(config, chNFe, DocumentoEnum.NFE);
+                TRetConsSitNFe retorno = Nfe.consultaXml(config, chNFe, DocumentoEnum.NFCE);
                 
                 cStat = retorno.getCStat();
                 xMotivo = retorno.getXMotivo();
@@ -2428,7 +2428,7 @@ public class NFCeMonitor {
                 br.com.swconsultoria.nfe.schema.envEventoCancNFe.TEnvEvento enviEvento = CancelamentoUtil.montaCancelamento(cancelamento, config);
 
                 //Envia o Evento de Cancelamento
-                br.com.swconsultoria.nfe.schema.envEventoCancNFe.TRetEnvEvento retorno = Nfe.cancelarNfe(config, enviEvento, true, DocumentoEnum.NFE);
+                br.com.swconsultoria.nfe.schema.envEventoCancNFe.TRetEnvEvento retorno = Nfe.cancelarNfe(config, enviEvento, true, DocumentoEnum.NFCE);
 
                 //Valida o Retorno do Cancelamento
                 RetornoUtil.validaCancelamento(retorno);
@@ -2561,10 +2561,10 @@ public class NFCeMonitor {
             
             try {
                 // Monta o XML de solicitação de inutilização.
-                TInutNFe inutNFe = InutilizacaoUtil.montaInutilizacao(DocumentoEnum.NFE, cnpj, numeroSerie, numeroInicial, numeroFinal, xJust, dataCancelamento, config);
+                TInutNFe inutNFe = InutilizacaoUtil.montaInutilizacao(DocumentoEnum.NFCE, cnpj, numeroSerie, numeroInicial, numeroFinal, xJust, dataCancelamento, config);
 
                 // Envia a solicitação de inutilização.
-                TRetInutNFe retorno = Nfe.inutilizacao(config,inutNFe, DocumentoEnum.NFE,true);
+                TRetInutNFe retorno = Nfe.inutilizacao(config,inutNFe, DocumentoEnum.NFCE,true);
 
                 // Valida o retorno.
                 RetornoUtil.validaInutilizacao(retorno);
