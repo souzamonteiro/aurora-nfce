@@ -31,9 +31,11 @@ import br.com.swconsultoria.nfe.schema_4.enviNFe.TNFe.InfNFe.*;
 import br.com.swconsultoria.nfe.schema_4.enviNFe.TNFe.InfNFe.Det.Imposto;
 import br.com.swconsultoria.nfe.schema_4.enviNFe.TNFe.InfNFe.Det.Imposto.COFINS;
 import br.com.swconsultoria.nfe.schema_4.enviNFe.TNFe.InfNFe.Det.Imposto.COFINS.COFINSAliq;
+import br.com.swconsultoria.nfe.schema_4.enviNFe.TNFe.InfNFe.Det.Imposto.COFINS.COFINSOutr;
 import br.com.swconsultoria.nfe.schema_4.enviNFe.TNFe.InfNFe.Det.Imposto.ICMS;
 import br.com.swconsultoria.nfe.schema_4.enviNFe.TNFe.InfNFe.Det.Imposto.PIS;
 import br.com.swconsultoria.nfe.schema_4.enviNFe.TNFe.InfNFe.Det.Imposto.PIS.PISAliq;
+import br.com.swconsultoria.nfe.schema_4.enviNFe.TNFe.InfNFe.Det.Imposto.PIS.PISOutr;
 import br.com.swconsultoria.nfe.schema_4.enviNFe.TNFe.InfNFe.Det.Prod;
 import br.com.swconsultoria.nfe.schema_4.enviNFe.TNFe.InfNFe.Total.ICMSTot;
 import br.com.swconsultoria.nfe.schema_4.inutNFe.TInutNFe;
@@ -1701,31 +1703,56 @@ public class NFCeMonitor {
 
                 if (jsonImposto.has("PIS")) {
                     JSONObject jsonPIS = jsonImposto.getJSONObject("PIS");
-                    JSONObject jsonPISAliq = jsonPIS.getJSONObject("PISAliq");
-
                     PIS pis = new PIS();
-                    PISAliq pisAliq = new PISAliq();
-                    pisAliq.setCST(jsonPISAliq.get("CST").toString());
-                    pisAliq.setVBC(jsonPISAliq.get("vBC").toString());
-                    pisAliq.setPPIS(jsonPISAliq.get("pPIS").toString());
-                    pisAliq.setVPIS(jsonPISAliq.get("vPIS").toString());
-                    pis.setPISAliq(pisAliq);
                     
+                    if (jsonPIS.has("PISAliq")) {
+                        JSONObject jsonPISAliq = jsonPIS.getJSONObject("PISAliq");
+
+                        PISAliq pisAliq = new PISAliq();
+                        pisAliq.setCST(jsonPISAliq.get("CST").toString());
+                        pisAliq.setVBC(jsonPISAliq.get("vBC").toString());
+                        pisAliq.setPPIS(jsonPISAliq.get("pPIS").toString());
+                        pisAliq.setVPIS(jsonPISAliq.get("vPIS").toString());
+                        pis.setPISAliq(pisAliq);
+                    }
+                    if (jsonPIS.has("PISOutr")) {
+                        JSONObject jsonPISOutr = jsonPIS.getJSONObject("PISOutr");
+
+                        PISOutr pisOutr = new PISOutr();
+                        pisOutr.setCST(jsonPISOutr.get("CST").toString());
+                        pisOutr.setQBCProd(jsonPISOutr.get("qBCProd").toString());
+                        pisOutr.setVAliqProd(jsonPISOutr.get("vAliqProd").toString());
+                        pisOutr.setVPIS(jsonPISOutr.get("vPIS").toString());
+                        pis.setPISOutr(pisOutr);
+                    }
                     JAXBElement<PIS> pisElement = new JAXBElement<PIS>(new QName("PIS"), PIS.class, pis);
                     imposto.getContent().add(pisElement);
                 }
                 
                 if (jsonImposto.has("COFINS")) {
                     JSONObject jsonCOFINS = jsonImposto.getJSONObject("COFINS");
-                    JSONObject jsonCOFINSAliq = jsonCOFINS.getJSONObject("COFINSAliq");
-
                     COFINS cofins = new COFINS();
-                    COFINSAliq cofinsAliq = new COFINSAliq();
-                    cofinsAliq.setCST(jsonCOFINSAliq.get("CST").toString());
-                    cofinsAliq.setVBC(jsonCOFINSAliq.get("vBC").toString());
-                    cofinsAliq.setPCOFINS(jsonCOFINSAliq.get("pCOFINS").toString());
-                    cofinsAliq.setVCOFINS(jsonCOFINSAliq.get("vCOFINS").toString());
-                    cofins.setCOFINSAliq(cofinsAliq);
+                    
+                    if (jsonCOFINS.has("COFINSAliq")) {
+                        JSONObject jsonCOFINSAliq = jsonCOFINS.getJSONObject("COFINSAliq");
+
+                        COFINSAliq cofinsAliq = new COFINSAliq();
+                        cofinsAliq.setCST(jsonCOFINSAliq.get("CST").toString());
+                        cofinsAliq.setVBC(jsonCOFINSAliq.get("vBC").toString());
+                        cofinsAliq.setPCOFINS(jsonCOFINSAliq.get("pCOFINS").toString());
+                        cofinsAliq.setVCOFINS(jsonCOFINSAliq.get("vCOFINS").toString());
+                        cofins.setCOFINSAliq(cofinsAliq);
+                    }
+                    if (jsonCOFINS.has("COFINSOutr")) {
+                        JSONObject jsonCOFINSOutr = jsonCOFINS.getJSONObject("COFINSOutr");
+
+                        COFINSOutr cofinsOutr = new COFINSOutr();
+                        cofinsOutr.setCST(jsonCOFINSOutr.get("CST").toString());
+                        cofinsOutr.setQBCProd(jsonCOFINSOutr.get("qBCProd").toString());
+                        cofinsOutr.setVAliqProd(jsonCOFINSOutr.get("vAliqProd").toString());
+                        cofinsOutr.setVCOFINS(jsonCOFINSOutr.get("vCOFINS").toString());
+                        cofins.setCOFINSOutr(cofinsOutr);
+                    }
                     
                     JAXBElement<COFINS> cofinsElement = new JAXBElement<COFINS>(new QName("COFINS"), COFINS.class, cofins);
                     imposto.getContent().add(cofinsElement);
