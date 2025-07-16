@@ -31,10 +31,12 @@ import br.com.swconsultoria.nfe.schema_4.enviNFe.TNFe.InfNFe.*;
 import br.com.swconsultoria.nfe.schema_4.enviNFe.TNFe.InfNFe.Det.Imposto;
 import br.com.swconsultoria.nfe.schema_4.enviNFe.TNFe.InfNFe.Det.Imposto.COFINS;
 import br.com.swconsultoria.nfe.schema_4.enviNFe.TNFe.InfNFe.Det.Imposto.COFINS.COFINSAliq;
+import br.com.swconsultoria.nfe.schema_4.enviNFe.TNFe.InfNFe.Det.Imposto.COFINS.COFINSNT;
 import br.com.swconsultoria.nfe.schema_4.enviNFe.TNFe.InfNFe.Det.Imposto.COFINS.COFINSOutr;
 import br.com.swconsultoria.nfe.schema_4.enviNFe.TNFe.InfNFe.Det.Imposto.ICMS;
 import br.com.swconsultoria.nfe.schema_4.enviNFe.TNFe.InfNFe.Det.Imposto.PIS;
 import br.com.swconsultoria.nfe.schema_4.enviNFe.TNFe.InfNFe.Det.Imposto.PIS.PISAliq;
+import br.com.swconsultoria.nfe.schema_4.enviNFe.TNFe.InfNFe.Det.Imposto.PIS.PISNT;
 import br.com.swconsultoria.nfe.schema_4.enviNFe.TNFe.InfNFe.Det.Imposto.PIS.PISOutr;
 import br.com.swconsultoria.nfe.schema_4.enviNFe.TNFe.InfNFe.Det.Prod;
 import br.com.swconsultoria.nfe.schema_4.enviNFe.TNFe.InfNFe.Total.ICMSTot;
@@ -1725,6 +1727,14 @@ public class NFCeMonitor {
                         pisOutr.setVPIS(jsonPISOutr.get("vPIS").toString());
                         pis.setPISOutr(pisOutr);
                     }
+                    if (jsonPIS.has("PISNT")) {
+                        JSONObject jsonPISNT = jsonPIS.getJSONObject("PISNT");
+                        
+                        PISNT pisNt = new PISNT();
+                        pisNt.setCST(jsonPISNT.get("CST").toString());
+                        pis.setPISNT(pisNt);
+                    }
+                    
                     JAXBElement<PIS> pisElement = new JAXBElement<PIS>(new QName("PIS"), PIS.class, pis);
                     imposto.getContent().add(pisElement);
                 }
@@ -1752,6 +1762,13 @@ public class NFCeMonitor {
                         cofinsOutr.setVAliqProd(jsonCOFINSOutr.get("vAliqProd").toString());
                         cofinsOutr.setVCOFINS(jsonCOFINSOutr.get("vCOFINS").toString());
                         cofins.setCOFINSOutr(cofinsOutr);
+                    }
+                    if (jsonCOFINS.has("COFINSNT")) {
+                        JSONObject jsonCOFINSNT = jsonCOFINS.getJSONObject("COFINSNT");
+                        
+                        COFINSNT cofinsNt = new COFINSNT();
+                        cofinsNt.setCST(jsonCOFINSNT.get("CST").toString());
+                        cofins.setCOFINSNT(cofinsNt);
                     }
                     
                     JAXBElement<COFINS> cofinsElement = new JAXBElement<COFINS>(new QName("COFINS"), COFINS.class, cofins);
